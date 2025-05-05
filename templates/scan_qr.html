@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Scan QR Code{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-6 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Scan QR Code</h4>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <p>Scan a friend's QR code to add them to your friends list.</p>
+                        <div id="reader" class="mb-3"></div>
+                        <div id="result" class="alert alert-info d-none"></div>
+                    </div>
+                    
+                    <form method="POST" id="qrForm" class="d-none">
+                        <input type="hidden" name="qr_data" id="qr_data">
+                    </form>
+                    
+                    <div class="text-center">
+                        <a href="{{ url_for('profiles') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Back to Profiles
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const html5QrcodeScanner = new Html5QrcodeScanner(
+            "reader", { fps: 10, qrbox: 250 });
+            
+        function onScanSuccess(decodedText, decodedResult) {
+            // Stop scanning
+            html5QrcodeScanner.clear();
+            
+            // Show result
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = "QR Code detected! Processing...";
+            resultDiv.classList.remove('d-none', 'alert-info', 'alert-danger');
+            resultDiv.classList.add('alert-success');
+            
+            // Submit form
+            document.getElementById('qr_data').value = decodedText;
+            document.getElementById('qrForm').submit();
+        }
+        
+        function onScanFailure(error) {
+            // Handle scan failure, usually better to ignore and keep scanning
+            console.warn(`QR error = ${error}`);
+        }
+        
+        html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+    });
+</script>
+{% endblock %} 

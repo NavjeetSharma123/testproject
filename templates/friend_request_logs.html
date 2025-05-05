@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block title %}Friend Request History{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="display-6 fw-bold mb-1">Friend Request History</h2>
+                    <p class="text-muted mb-0">Track all your friend request activities</p>
+                </div>
+                <div class="d-flex gap-3">
+                    <a href="{{ url_for('profiles') }}" class="btn btn-primary btn-lg rounded-pill px-4" style="background: linear-gradient(45deg, #0d6efd, #0a58ca); border: none; box-shadow: 0 4px 15px rgba(13, 110, 253, 0.3);">
+                        <i class="bi bi-people-fill me-2"></i>View All Profiles
+                    </a>
+                    <a href="{{ url_for('home') }}" class="btn btn-outline-primary btn-lg rounded-pill" hidden>
+                        <i class="bi bi-arrow-left me-2"></i> Back to Home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold">Filter Requests</h5>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-lg btn-outline-primary active rounded-pill me-2" data-filter="all">
+                                <i class="bi bi-grid-3x3-gap me-2"></i>All
+                            </button>
+                            <button type="button" class="btn btn-lg btn-outline-primary rounded-pill me-2" data-filter="sent">
+                                <i class="bi bi-send me-2"></i>Sent
+                            </button>
+                            <button type="button" class="btn btn-lg btn-outline-primary rounded-pill" data-filter="received">
+                                <i class="bi bi-inbox me-2"></i>Received
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            {% if logs %}
+                <div class="row g-4" id="request-cards">
+                    {% for log in logs %}
+                        <div class="col-md-6 col-lg-4 request-card" 
+                             data-type="{% if log.friend_request.sender_id == current_user.id %}sent{% else %}received{% endif %}">
+                            <div class="card h-100 border-0 shadow-sm hover-card">
+                                <div class="card-header bg-white border-0 py-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="badge rounded-pill px-3 py-2 {% if log.action == 'created' %}bg-primary{% elif log.action == 'accepted' %}bg-success{% elif log.action == 'rejected' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                            <i class="bi {% if log.action == 'created' %}bi-plus-circle{% elif log.action == 'accepted' %}bi-check-circle{% elif log.action == 'rejected' %}bi-x-circle{% else %}bi-clock{% endif %} me-1"></i>
+                                            {{ log.action|title }}
+                                        </span>
+                                        <small class="text-muted fw-medium">{{ log.created_at.strftime('%b %d, %Y %I:%M %p') }}</small>
+                                    </div>
+                                </div>
+                                <div class="card-body p-4">
+                                    <div class="d-flex align-items-center mb-4">
+                                        <div class="flex-shrink-0">
+                                            <div class="avatar-circle {% if log.friend_request.sender_id == current_user.id %}bg-primary{% else %}bg-success{% endif %}">
+                                                {{ log.friend_request.sender.username[0]|upper }}
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1 ms-3">
+                                            <h6 class="mb-1 fw-bold">
+                                                {% if log.friend_request.sender_id == current_user.id %}
+                                                    You sent a request to <span class="text-primary">{{ log.friend_request.receiver.username }}</span>
+                                                {% else %}
+                                                    <span class="text-success">{{ log.friend_request.sender.username }}</span> sent you a request
+                                                {% endif %}
+                                            </h6>
+                                            <small class="text-muted">
+                                                {% if log.previous_status and log.new_status %}
+                                                    Status changed from <span class="text-muted">{{ log.previous_status }}</span> to
+                                                    <span class="{% if log.new_status == 'accepted' %}text-success{% elif log.new_status == 'rejected' %}text-danger{% else %}text-primary{% endif %} fw-bold">{{ log.new_status }}</span>
+                                                {% else %}
+                                                    Status: <span class="{% if log.new_status == 'accepted' %}text-success{% elif log.new_status == 'rejected' %}text-danger{% else %}text-primary{% endif %} fw-bold">{{ log.new_status }}</span>
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                    </div>
+                                    
+                                    {% if log.notes %}
+                                        <div class="mt-3 p-3 bg-light rounded-3 border-start border-4 border-primary">
+                                            <small class="text-muted"><i class="bi bi-chat-left-text me-2"></i>{{ log.notes }}</small>
+                                        </div>
+                                    {% endif %}
+                                    
+                                    <div class="mt-4 d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">
+                                            <i class="bi bi-person me-1"></i>
+                                            Modified by: {{ log.modified_by.username }}
+                                        </small>
+                                        <div class="d-flex gap-2">
+                                            {% if log.friend_request.sender_id == current_user.id %}
+                                                <a href="{{ url_for('view_profile', username=log.friend_request.receiver.username) }}" class="btn btn-primary rounded-pill">
+                                                    <i class="bi bi-person-circle me-1"></i>View Profile
+                                                </a>
+                                            {% else %}
+                                                <a href="{{ url_for('view_profile', username=log.friend_request.sender.username) }}" class="btn btn-primary rounded-pill">
+                                                    <i class="bi bi-person-circle me-1"></i>View Profile
+                                                </a>
+                                                {% if log.friend_request.status == 'pending' %}
+                                                    <form action="{{ url_for('handle_friend_request', request_id=log.friend_request.id, action='accept') }}" method="post" class="d-inline">
+                                                        <button type="submit" class="btn btn-success rounded-pill">
+                                                            <i class="bi bi-check-lg me-1"></i>Accept
+                                                        </button>
+                                                    </form>
+                                                    <form action="{{ url_for('handle_friend_request', request_id=log.friend_request.id, action='reject') }}" method="post" class="d-inline">
+                                                        <button type="submit" class="btn btn-danger rounded-pill">
+                                                            <i class="bi bi-x-lg me-1"></i>Reject
+                                                        </button>
+                                                    </form>
+                                                {% endif %}
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info border-0 shadow-sm d-flex align-items-center">
+                    <i class="bi bi-info-circle-fill me-3 fs-4"></i>
+                    <div>
+                        <h5 class="alert-heading mb-1">No Friend Request Logs</h5>
+                        <p class="mb-0">You haven't made or received any friend requests yet.</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .avatar-circle {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 1.2rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .bg-primary {
+        background-color: #0d6efd !important;
+    }
+    
+    .bg-success {
+        background-color: #198754 !important;
+    }
+    
+    .bg-danger {
+        background-color: #dc3545 !important;
+    }
+    
+    .bg-secondary {
+        background-color: #6c757d !important;
+    }
+
+    .hover-card {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+
+    .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15) !important;
+    }
+
+    .btn-outline-primary {
+        border-width: 2px;
+    }
+
+    .btn-outline-primary:hover {
+        transform: translateY(-1px);
+    }
+
+    .badge {
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .card {
+        border-radius: 1rem;
+    }
+
+    .btn-group .btn {
+        transition: all 0.2s ease-in-out;
+    }
+
+    .btn-group .btn:hover {
+        transform: translateY(-1px);
+    }
+
+    .btn-group .btn.active {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const filterButtons = document.querySelectorAll('[data-filter]');
+        const requestCards = document.querySelectorAll('.request-card');
+        
+        filterButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Remove active class from all buttons
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                
+                // Add active class to clicked button
+                this.classList.add('active');
+                
+                const filter = this.getAttribute('data-filter');
+                
+                // Show/hide cards based on filter with animation
+                requestCards.forEach(card => {
+                    if (filter === 'all' || card.getAttribute('data-type') === filter) {
+                        card.style.opacity = '0';
+                        card.style.display = 'block';
+                        setTimeout(() => {
+                            card.style.opacity = '1';
+                        }, 50);
+                    } else {
+                        card.style.opacity = '0';
+                        setTimeout(() => {
+                            card.style.display = 'none';
+                        }, 300);
+                    }
+                });
+            });
+        });
+
+        // Add fade-in animation to cards on page load
+        requestCards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.display = 'block';
+            setTimeout(() => {
+                card.style.opacity = '1';
+            }, index * 100);
+        });
+    });
+</script>
+{% endblock %} 

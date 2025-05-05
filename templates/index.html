@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row min-vh-100 align-items-center">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow-lg border-0 rounded-4 animate__animated animate__fadeIn">
+                <div class="card-body p-5">
+                    <h1 class="text-center mb-4 display-4 fw-bold gradient-text">Welcome to Mood App</h1>
+                    
+                    {% if current_user.is_authenticated %}
+                        <div class="text-center animate__animated animate__fadeInUp">
+                            <p class="lead text-muted">Welcome back, <span class="text-primary fw-bold">{{ current_user.username }}</span>!</p>
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-primary btn-lg px-5 py-3 rounded-pill shadow-sm hover-scale">
+                                <i class="fas fa-chart-line me-2"></i>Go to Dashboard
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="text-center animate__animated animate__fadeInUp">
+                            <p class="lead text-muted mb-4">Join our community to share your moods and connect with friends!</p>
+                            <div class="d-flex justify-content-center gap-3">
+                                <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg px-5 py-3 rounded-pill shadow-sm hover-scale">
+                                    <i class="fas fa-sign-in-alt me-2"></i>Login
+                                </a>
+                                <a href="{{ url_for('register') }}" class="btn btn-outline-primary btn-lg px-5 py-3 rounded-pill shadow-sm hover-scale">
+                                    <i class="fas fa-user-plus me-2"></i>Register
+                                </a>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .gradient-text {
+        background: linear-gradient(45deg, #FF6B6B, #4ECDC4, #45B7D1);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        animation: gradient 3s ease infinite;
+        background-size: 200% 200%;
+    }
+
+    .hover-scale {
+        transition: transform 0.3s ease;
+    }
+
+    .hover-scale:hover {
+        transform: scale(1.05);
+    }
+
+    .card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+    }
+
+    @keyframes gradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        min-height: 100vh;
+    }
+</style>
+{% endblock %} 

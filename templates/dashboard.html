@@ -1,0 +1,1071 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --primary-color: #4a90e2;
+        --secondary-color: #f5f6fa;
+        --accent-color: #ff6b6b;
+        --text-color: #2d3436;
+        --border-radius: 12px;
+        --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    body {
+        background-color: var(--secondary-color);
+        color: var(--text-color);
+    }
+
+    .card {
+        border: none;
+        border-radius: var(--border-radius);
+        box-shadow: var(--card-shadow);
+        transition: transform 0.2s ease;
+        margin-bottom: 1.5rem;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+    }
+
+    .card-header {
+        background-color: white;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        border-radius: var(--border-radius) var(--border-radius) 0 0 !important;
+    }
+
+    .post-media {
+        width: 100%;
+        max-width: 500px;
+        height: 500px;
+        object-fit: contain;
+        margin: 0 auto;
+        display: block;
+        border-radius: var(--border-radius);
+    }
+    
+    .post-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        padding: 1rem;
+    }
+    
+    .post-card {
+        max-width: 500px;
+        width: 100%;
+        margin: 0 auto;
+    }
+
+    .profile-picture {
+        width: 150px;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 4px solid white;
+        box-shadow: var(--card-shadow);
+    }
+
+    .stats-card {
+        background: linear-gradient(135deg, var(--primary-color), #6c5ce7);
+        color: white;
+    }
+
+    .stats-card h6 {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .stats-card p {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin: 0;
+    }
+
+    .btn-primary {
+        background-color: var(--primary-color);
+        border: none;
+        padding: 0.5rem 1.5rem;
+        border-radius: 25px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        background-color: #357abd;
+        transform: translateY(-2px);
+    }
+
+    .btn-outline-primary {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+        border-radius: 25px;
+        padding: 0.5rem 1.5rem;
+    }
+
+    .btn-outline-primary:hover {
+        background-color: var(--primary-color);
+        color: white;
+    }
+
+    .badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 500;
+    }
+
+    .mood-emoji {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    .form-control, .form-select {
+        border-radius: 10px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        padding: 0.75rem 1rem;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.25);
+    }
+
+    .progress {
+        height: 8px;
+        border-radius: 4px;
+        background-color: rgba(0, 0, 0, 0.1);
+    }
+
+    .progress-bar {
+        background-color: var(--primary-color);
+    }
+
+    .list-group-item {
+        border: none;
+        margin-bottom: 1rem;
+        border-radius: var(--border-radius) !important;
+        box-shadow: var(--card-shadow);
+    }
+
+    .nav-tabs .nav-link {
+        border: none;
+        color: var(--text-color);
+        padding: 1rem 1.5rem;
+        border-radius: var(--border-radius);
+    }
+
+    .nav-tabs .nav-link.active {
+        background-color: var(--primary-color);
+        color: white;
+    }
+
+    .modal-content {
+        border-radius: var(--border-radius);
+        border: none;
+    }
+
+    .modal-header {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .alert {
+        border-radius: var(--border-radius);
+        border: none;
+    }
+</style>
+
+<div class="container py-4">
+    <div class="row g-4">
+        <!-- Left Sidebar - User Profile Section -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <img src="{{ current_user.profile_picture or url_for('static', filename='default_profile.png') }}" 
+                         class="profile-picture mb-3" 
+                         alt="Profile Picture">
+                    <h4 class="mb-2">{{ current_user.username }}</h4>
+                    <p class="text-muted mb-3">{{ current_user.email }}</p>
+                    <p class="mb-3">{{ current_user.bio or "No bio yet" }}</p>
+                    <div class="d-flex justify-content-center align-items-center gap-2 mb-3">
+                        <span class="badge {% if current_user.is_public_profile %}bg-success{% else %}bg-secondary{% endif %}">
+                            <i class="bi {% if current_user.is_public_profile %}bi-globe{% else %}bi-lock{% endif %}"></i>
+                            {% if current_user.is_public_profile %}Public Profile{% else %}Private Profile{% endif %}
+                        </span>
+                    </div>
+                    <div class="d-flex justify-content-center gap-2">
+                        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                            <i class="bi bi-pencil-square"></i> Edit Profile
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Stats -->
+            <div class="card stats-card mt-4">
+                <div class="card-body">
+                    <h5 class="card-title text-white mb-4">Your Stats</h5>
+                    <div class="row text-center g-3">
+                        <div class="col-3">
+                            <h6>Moods</h6>
+                            <p>{{ user_moods|length }}</p>
+                        </div>
+                        <div class="col-3">
+                            <h6>Posts</h6>
+                            <p>{{ user_posts|length }}</p>
+                        </div>
+                        <div class="col-3">
+                            <h6>Polls</h6>
+                            <p>{{ user_polls|length }}</p>
+                        </div>
+                        <div class="col-3">
+                            <h6><a href="{{ url_for('friends_management') }}" class="text-white text-decoration-none">Friends</a></h6>
+                            <p>{{ current_user.friends.count() }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Share Buttons -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h6 class="card-title mb-3">Share</h6>
+                    <div class="d-grid gap-3">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary">
+                            <i class="bi bi-emoji-smile"></i> Share Your Mood
+                        </a>
+                        <a href="{{ url_for('create_post') }}" class="btn btn-primary">
+                            <i class="bi bi-camera"></i> Share Unfiltered Content
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content Section -->
+        <div class="col-md-6">
+            <!-- Share Mood Card -->
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Share Your Mood</h5>
+                    <form method="POST" action="{{ url_for('create_mood') }}">
+                        <div class="mb-4">
+                            <label for="emoji" class="form-label">How are you feeling?</label>
+                            <select class="form-select" id="emoji" name="emoji" required>
+                                <option value="😊">😊 Happy</option>
+                                <option value="😢">😢 Sad</option>
+                                <option value="😡">😡 Angry</option>
+                                <option value="😴">😴 Tired</option>
+                                <option value="🤔">🤔 Thoughtful</option>
+                                <option value="😍">😍 In Love</option>
+                                <option value="🤗">🤗 Grateful</option>
+                                <option value="😤">😤 Frustrated</option>
+                                <option value="🥳">🥳 Celebrating</option>
+                                <option value="😌">😌 Peaceful</option>
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label for="song" class="form-label">What are you listening to? (optional)</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-music-note-beamed"></i></span>
+                                <input type="text" class="form-control" id="song" name="song" placeholder="Song name and artist">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Share Mood</button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Your Recent Posts -->
+            <div class="card mt-4">
+                <div class="card-header d-flex justify-content-between align-items-center py-3">
+                    <h5 class="mb-0">Your Recent Posts</h5>
+                    <div>
+                        <a href="#" class="btn btn-sm btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#archivedPostsModal">
+                            <i class="bi bi-archive"></i> Archived Posts
+                        </a>
+                        <a href="{{ url_for('create_post') }}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-plus-lg"></i> New Post
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if user_posts %}
+                        <div class="list-group">
+                            {% for post in user_posts %}
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <div>
+                                            <span class="badge bg-primary me-2">One-Shot</span>
+                                            {% if not post.is_public %}
+                                                <span class="badge bg-secondary">Friends Only</span>
+                                            {% else %}
+                                                <span class="badge bg-info">Public</span>
+                                            {% endif %}
+                                        </div>
+                                        <small class="text-muted">{{ post.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                    </div>
+                                    <div class="post-container">
+                                        {% if post.media_type == 'photo' %}
+                                            <img src="{{ post.media_url }}" class="post-media" alt="Post image">
+                                        {% else %}
+                                            <video src="{{ post.media_url }}" class="post-media" controls></video>
+                                        {% endif %}
+                                    </div>
+                                    <p class="mt-3 mb-3">{{ post.caption or "No caption" }}</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <span class="me-3">
+                                                <i class="bi bi-heart-fill text-danger"></i> {{ post.reactions.count() }}
+                                            </span>
+                                            <span>
+                                                <i class="bi bi-chat-fill text-primary"></i> {{ post.comments.count() }}
+                                            </span>
+                                        </div>
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" id="postActions{{ post.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                                Actions
+                                            </button>
+                                            <ul class="dropdown-menu" aria-labelledby="postActions{{ post.id }}">
+                                                <li><a class="dropdown-item" href="{{ url_for('view_post', post_id=post.id) }}"><i class="bi bi-eye"></i> View</a></li>
+                                                <li><a class="dropdown-item" href="#" onclick="archivePost({{ post.id }})"><i class="bi bi-archive"></i> Archive</a></li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><a class="dropdown-item text-danger" href="#" onclick="deletePost({{ post.id }})"><i class="bi bi-trash"></i> Delete</a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-camera text-muted" style="font-size: 3rem;"></i>
+                            <p class="text-muted mt-3">You haven't shared any posts yet.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Your Recent Moods -->
+            <div class="card mt-4">
+                <div class="card-header d-flex justify-content-between align-items-center py-3">
+                    <h5 class="mb-0">Your Recent Moods</h5>
+                    <a href="#" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if user_moods %}
+                        <div class="list-group">
+                            {% for mood in user_moods %}
+                                <div class="list-group-item">
+                                    <div class="text-center">
+                                        <div class="mood-emoji">{{ mood.emoji }}</div>
+                                        <h5 class="mb-3">
+                                            {% if mood.emoji == '😊' %}Happy
+                                            {% elif mood.emoji == '😢' %}Sad
+                                            {% elif mood.emoji == '😡' %}Angry
+                                            {% elif mood.emoji == '😴' %}Tired
+                                            {% elif mood.emoji == '🤔' %}Thoughtful
+                                            {% elif mood.emoji == '😍' %}In Love
+                                            {% elif mood.emoji == '🤗' %}Grateful
+                                            {% elif mood.emoji == '😤' %}Frustrated
+                                            {% elif mood.emoji == '🥳' %}Celebrating
+                                            {% elif mood.emoji == '😌' %}Peaceful
+                                            {% endif %}
+                                        </h5>
+                                        {% if mood.caption %}
+                                            <p class="mb-3">{{ mood.caption }}</p>
+                                        {% endif %}
+                                        {% if mood.song_url %}
+                                            <div class="text-muted mb-3">
+                                                <i class="bi bi-music-note-beamed"></i>
+                                                <small>{{ mood.song_url.split('/')[-1] }}</small>
+                                            </div>
+                                        {% endif %}
+                                        <small class="text-muted">{{ mood.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-emoji-smile text-muted" style="font-size: 3rem;"></i>
+                            <p class="text-muted mt-3">You haven't shared any moods yet.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Your Polls -->
+            <div class="card mt-4">
+                <div class="card-header d-flex justify-content-between align-items-center py-3">
+                    <h5 class="mb-0">Your Polls</h5>
+                    <a href="{{ url_for('create_poll') }}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-plus"></i> Create Poll
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if user_polls %}
+                        <div class="list-group">
+                            {% for poll in user_polls %}
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h6 class="mb-0" style="cursor: pointer;" onclick="togglePollDetails(this)">
+                                            {{ poll.question }}
+                                            <i class="bi bi-chevron-down ms-2"></i>
+                                        </h6>
+                                    </div>
+                                    
+                                    <div class="poll-details" style="display: none;">
+                                        {% if poll.image_url %}
+                                            <img src="{{ poll.image_url }}" class="img-fluid rounded mb-3" alt="Poll image" style="max-height: 200px;">
+                                        {% endif %}
+                                        
+                                        {% set user_vote = poll.votes.filter_by(user_id=current_user.id).first() %}
+                                        {% set total_votes = poll.votes.count() %}
+                                        
+                                        <div class="mt-3">
+                                            {% for option in poll.options_list %}
+                                                {% set vote_count = poll.votes.filter_by(option_index=loop.index0).count() %}
+                                                {% set percentage = (vote_count / total_votes * 100) if total_votes > 0 else 0 %}
+                                                
+                                                <div class="mb-3">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="radio" 
+                                                                   name="poll{{ poll.id }}" 
+                                                                   id="option{{ poll.id }}_{{ loop.index }}"
+                                                                   value="{{ loop.index0 }}"
+                                                                   {% if user_vote and user_vote.option_index == loop.index0 %}checked{% endif %}
+                                                                   {% if user_vote %}disabled{% endif %}>
+                                                            <label class="form-check-label" for="option{{ poll.id }}_{{ loop.index }}">
+                                                                {{ option }}
+                                                            </label>
+                                                        </div>
+                                                        {% if user_vote %}
+                                                            <small class="text-muted">{{ vote_count }} votes ({{ "%.1f"|format(percentage) }}%)</small>
+                                                        {% endif %}
+                                                    </div>
+                                                    {% if user_vote %}
+                                                        <div class="progress mt-2">
+                                                            <div class="progress-bar" role="progressbar" style="width: {{ percentage }}%"></div>
+                                                        </div>
+                                                    {% endif %}
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                        
+                                        <div class="d-flex justify-content-between align-items-center mt-3">
+                                            {% if not user_vote %}
+                                                <button class="btn btn-primary vote-btn" data-poll-id="{{ poll.id }}">Vote</button>
+                                            {% endif %}
+                                            <small class="text-muted">{{ total_votes }} votes • {{ poll.created_at.strftime('%Y-%m-%d') }}</small>
+                                        </div>
+                                        
+                                        <div class="alert alert-success mt-3" style="display: none;" id="voteSuccess{{ poll.id }}">
+                                            Your vote has been recorded!
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-graph-up text-muted" style="font-size: 3rem;"></i>
+                            <p class="text-muted mt-3">You haven't created any polls yet.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Sidebar - Suggested Friends and Trending Moods -->
+        <div class="col-md-3">
+            <!-- Suggested Friends -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Suggested Friends</h5>
+                </div>
+                <div class="card-body">
+                    {% if suggested_friends %}
+                        <div class="list-group">
+                            {% for user in suggested_friends %}
+                                <div class="list-group-item">
+                                    <div class="d-flex align-items-center">
+                                        <img src="{{ user.profile_picture or url_for('static', filename='default_profile.png') }}" 
+                                             class="rounded-circle me-3" 
+                                             style="width: 40px; height: 40px; object-fit: cover;" 
+                                             alt="{{ user.username }}">
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-0">{{ user.username }}</h6>
+                                            <small class="text-muted">{{ user.bio or "No bio yet" }}</small>
+                                            </div>
+                                        <button class="btn btn-sm btn-outline-primary add-friend-btn" data-user-id="{{ user.id }}">
+                                            <i class="bi bi-person-plus"></i> Add
+                                        </button>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-center text-muted">No suggested friends at the moment.</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Trending Moods -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Trending Moods</h5>
+                </div>
+                <div class="card-body">
+                    {% if trending_moods %}
+                        <div class="list-group">
+                            {% for mood in trending_moods %}
+                                <div class="list-group-item">
+                                    <div class="d-flex align-items-center">
+                                        <div class="mood-emoji me-3">{{ mood.emoji }}</div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-0">
+                                                {% if mood.emoji == '😊' %}Happy
+                                                {% elif mood.emoji == '😢' %}Sad
+                                                {% elif mood.emoji == '😡' %}Angry
+                                                {% elif mood.emoji == '😴' %}Tired
+                                                {% elif mood.emoji == '🤔' %}Thoughtful
+                                                {% elif mood.emoji == '😍' %}In Love
+                                                {% elif mood.emoji == '🤗' %}Grateful
+                                                {% elif mood.emoji == '😤' %}Frustrated
+                                                {% elif mood.emoji == '🥳' %}Celebrating
+                                                {% elif mood.emoji == '😌' %}Peaceful
+                                                {% endif %}
+                                        </h6>
+                                            <small class="text-muted">by {{ mood.author.username }}</small>
+                                        </div>
+                                        <span class="badge bg-primary">
+                                            <i class="bi bi-heart-fill"></i> {{ mood.reactions.count() }}
+                                        </span>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-center text-muted">No trending moods at the moment.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editProfileModalLabel">Edit Profile</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <ul class="nav nav-tabs mb-4" id="editProfileTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab">
+                            <i class="bi bi-person"></i> Profile
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="password-tab" data-bs-toggle="tab" data-bs-target="#password" type="button" role="tab">
+                            <i class="bi bi-key"></i> Password
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="privacy-tab" data-bs-toggle="tab" data-bs-target="#privacy" type="button" role="tab">
+                            <i class="bi bi-shield-lock"></i> Privacy & Legal
+                        </button>
+                    </li>
+                </ul>
+                <div class="tab-content" id="editProfileTabsContent">
+                    <!-- Profile Tab -->
+                    <div class="tab-pane fade show active" id="profile" role="tabpanel">
+                        <form id="editProfileForm" method="POST" action="{{ url_for('edit_profile') }}" enctype="multipart/form-data">
+                            <div class="mb-4 text-center">
+                                <div class="position-relative d-inline-block">
+                                    <img id="profilePreview" src="{{ current_user.profile_picture or url_for('static', filename='default_profile.png') }}" 
+                                         class="profile-picture" 
+                                         alt="Profile Picture">
+                                    <label for="profilePicture" class="position-absolute bottom-0 end-0 bg-primary text-white rounded-circle p-2" style="cursor: pointer;">
+                                        <i class="bi bi-camera"></i>
+                                    </label>
+                                    <input type="file" class="d-none" id="profilePicture" name="profile_picture" accept="image/*">
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label for="username" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="username" name="username" value="{{ current_user.username }}" required>
+                            </div>
+                            <div class="mb-4">
+                                <label for="bio" class="form-label">Bio</label>
+                                <textarea class="form-control" id="bio" name="bio" rows="3">{{ current_user.bio or "" }}</textarea>
+                            </div>
+                            <div class="mb-4">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="is_public_profile" name="is_public_profile" {% if current_user.is_public_profile %}checked{% endif %}>
+                                    <label class="form-check-label" for="is_public_profile">Public Profile</label>
+                                    <div class="form-text">
+                                        <i class="bi bi-info-circle"></i> When enabled, your profile will be visible to everyone. When disabled, only your friends can see your profile.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                            </div>
+                        </form>
+                    </div>
+                    <!-- Password Tab -->
+                    <div class="tab-pane fade" id="password" role="tabpanel">
+                        <form id="changePasswordForm" method="POST" action="{{ url_for('change_password') }}">
+                            <div class="mb-4">
+                                <label for="current_password" class="form-label">Current Password</label>
+                                <input type="password" class="form-control" id="current_password" name="current_password" required>
+                            </div>
+                            <div class="mb-4">
+                                <label for="new_password" class="form-label">New Password</label>
+                                <input type="password" class="form-control" id="new_password" name="new_password" required>
+                                <div class="form-text">
+                                    <i class="bi bi-info-circle"></i> Password must be at least 8 characters long and include a mix of letters, numbers, and special characters.
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label for="confirm_password" class="form-label">Confirm New Password</label>
+                                <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                            </div>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">Change Password</button>
+                            </div>
+                        </form>
+                    </div>
+                    <!-- Privacy & Legal Tab -->
+                    <div class="tab-pane fade" id="privacy" role="tabpanel">
+                        <div class="list-group">
+                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" onclick="togglePrivacyItem(this)">
+                                <div>
+                                    <i class="bi bi-shield-lock me-2"></i>
+                                    Privacy Policy
+                                </div>
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                            <div class="privacy-content" style="display: none;">
+                                <div class="p-3">
+                                    <p>Your privacy is important to us. This policy outlines how we collect, use, and protect your personal information.</p>
+                                    <a href="#" class="btn btn-sm btn-outline-primary">Read More</a>
+                                </div>
+                            </div>
+                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" onclick="togglePrivacyItem(this)">
+                                <div>
+                                    <i class="bi bi-file-text me-2"></i>
+                                    Terms of Service
+                                </div>
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                            <div class="privacy-content" style="display: none;">
+                                <div class="p-3">
+                                    <p>By using our service, you agree to these terms and conditions.</p>
+                                    <a href="#" class="btn btn-sm btn-outline-primary">Read More</a>
+                                </div>
+                            </div>
+                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" onclick="togglePrivacyItem(this)">
+                                <div>
+                                    <i class="bi bi-people me-2"></i>
+                                    Community Guidelines
+                                </div>
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                            <div class="privacy-content" style="display: none;">
+                                <div class="p-3">
+                                    <p>Our community guidelines help maintain a safe and respectful environment for all users.</p>
+                                    <a href="#" class="btn btn-sm btn-outline-primary">Read More</a>
+                                </div>
+                            </div>
+                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" onclick="togglePrivacyItem(this)">
+                                <div>
+                                    <i class="bi bi-cookie me-2"></i>
+                                    Cookie Policy
+                                </div>
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                            <div class="privacy-content" style="display: none;">
+                                <div class="p-3">
+                                    <p>We use cookies to enhance your experience and provide essential functionality.</p>
+                                    <a href="#" class="btn btn-sm btn-outline-primary">Read More</a>
+                                </div>
+                            </div>
+                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" onclick="togglePrivacyItem(this)">
+                                <div>
+                                    <i class="bi bi-check-circle me-2"></i>
+                                    Data Consent Management
+                                </div>
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                            <div class="privacy-content" style="display: none;">
+                                <div class="p-3">
+                                    <p>Manage your data preferences and consent settings.</p>
+                                    <a href="#" class="btn btn-sm btn-outline-primary">Manage Settings</a>
+                                </div>
+                            </div>
+                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" onclick="togglePrivacyItem(this)">
+                                <div>
+                                    <i class="bi bi-headset me-2"></i>
+                                    Contact Legal Support
+                                </div>
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                            <div class="privacy-content" style="display: none;">
+                                <div class="p-3">
+                                    <p>Need help with legal matters? Contact our support team.</p>
+                                    <a href="#" class="btn btn-sm btn-outline-primary">Contact Support</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="{{ url_for('logout') }}" class="btn btn-outline-danger">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" hidden>Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Image Editor Modal -->
+<div class="modal fade" id="imageEditorModal" tabindex="-1" aria-labelledby="imageEditorModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imageEditorModalLabel">Adjust Profile Picture</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="img-container" style="max-height: 400px;">
+                            <img id="cropperImage" src="" alt="Profile picture to adjust">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label">Zoom</label>
+                            <input type="range" class="form-range" id="zoomRange" min="0" max="100" value="0">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Position</label>
+                            <p class="text-muted small">Drag the image to adjust its position</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="cropButton">Apply</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Archived Posts Modal -->
+<div class="modal fade" id="archivedPostsModal" tabindex="-1" aria-labelledby="archivedPostsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="archivedPostsModalLabel">Archived Posts</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {% if archived_posts %}
+                    <div class="list-group">
+                        {% for post in archived_posts %}
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div>
+                                        <span class="badge bg-primary me-2">One-Shot</span>
+                                        {% if not post.is_public %}
+                                            <span class="badge bg-secondary">Friends Only</span>
+                                        {% else %}
+                                            <span class="badge bg-info">Public</span>
+                                        {% endif %}
+                                    </div>
+                                    <small class="text-muted">{{ post.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                </div>
+                                <div class="post-container">
+                                    {% if post.media_type == 'photo' %}
+                                        <img src="{{ post.media_url }}" class="post-media" alt="Post image">
+                                    {% else %}
+                                        <video src="{{ post.media_url }}" class="post-media" controls></video>
+                                    {% endif %}
+                                </div>
+                                <p class="mt-3 mb-3">{{ post.caption or "No caption" }}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="me-3">
+                                            <i class="bi bi-heart-fill text-danger"></i> {{ post.reactions.count() }}
+                                        </span>
+                                        <span>
+                                            <i class="bi bi-chat-fill text-primary"></i> {{ post.comments.count() }}
+                                        </span>
+                                    </div>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" id="archivedPostActions{{ post.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                            Actions
+                                        </button>
+                                        <ul class="dropdown-menu" aria-labelledby="archivedPostActions{{ post.id }}">
+                                            <li><a class="dropdown-item" href="{{ url_for('view_post', post_id=post.id) }}"><i class="bi bi-eye"></i> View</a></li>
+                                            <li><a class="dropdown-item" href="#" onclick="archivePost({{ post.id }})"><i class="bi bi-archive"></i> Unarchive</a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><a class="dropdown-item text-danger" href="#" onclick="deletePost({{ post.id }})"><i class="bi bi-trash"></i> Delete</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-archive text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-3">You haven't archived any posts yet.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<!-- Add Cropper.js CSS and JS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+
+<script>
+    let cropper = null;
+    let imageEditorModal = null;
+    let originalFile = null;
+
+    // Initialize the image editor modal
+    document.addEventListener('DOMContentLoaded', function() {
+        imageEditorModal = new bootstrap.Modal(document.getElementById('imageEditorModal'));
+        
+        // Handle profile picture selection
+        document.getElementById('profilePicture').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                originalFile = file;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const cropperImage = document.getElementById('cropperImage');
+                    cropperImage.src = e.target.result;
+                    
+                    // Destroy existing cropper if it exists
+                    if (cropper) {
+                        cropper.destroy();
+                    }
+                    
+                    // Initialize new cropper with fixed aspect ratio
+                    cropper = new Cropper(cropperImage, {
+                        aspectRatio: 1,
+                        viewMode: 1,
+                        autoCropArea: 1,
+                        responsive: true,
+                        restore: false,
+                        guides: true,
+                        center: true,
+                        highlight: false,
+                        cropBoxMovable: false,
+                        cropBoxResizable: false,
+                        toggleDragModeOnDblclick: false,
+                        rotatable: false,
+                        scalable: false,
+                        zoomable: true,
+                        movable: true
+                    });
+                    
+                    // Show the editor modal
+                    imageEditorModal.show();
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Handle zoom range
+        document.getElementById('zoomRange').addEventListener('input', function(e) {
+            if (cropper) {
+                cropper.zoomTo(e.target.value / 100);
+            }
+        });
+
+        // Handle crop button
+        document.getElementById('cropButton').addEventListener('click', function() {
+            if (cropper) {
+                const canvas = cropper.getCroppedCanvas({
+                    width: 300,
+                    height: 300
+                });
+                
+                // Convert canvas to blob
+                canvas.toBlob(function(blob) {
+                    // Create a new file from the blob
+                    const croppedFile = new File([blob], originalFile.name, {
+                        type: 'image/jpeg',
+                        lastModified: Date.now()
+                    });
+                    
+                    // Create a new FileList-like object
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(croppedFile);
+                    
+                    // Update the file input
+                    document.getElementById('profilePicture').files = dataTransfer.files;
+                    
+                    // Update the preview
+                    document.getElementById('profilePreview').src = canvas.toDataURL();
+                    
+                    // Hide the modal
+                    imageEditorModal.hide();
+                }, 'image/jpeg', 0.9);
+            }
+        });
+    });
+
+    // Handle password change form submission
+    document.getElementById('changePasswordForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const newPassword = document.getElementById('new_password').value;
+        const confirmPassword = document.getElementById('confirm_password').value;
+        
+        if (newPassword !== confirmPassword) {
+            alert('New passwords do not match');
+            return;
+        }
+        
+        // Submit the form
+        this.submit();
+    });
+
+    // Handle poll voting
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.vote-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const pollId = this.dataset.pollId;
+                const selectedOption = document.querySelector(`input[name="poll${pollId}"]:checked`);
+                
+                if (!selectedOption) {
+                    alert('Please select an option to vote');
+                    return;
+                }
+                
+                const optionIndex = selectedOption.value;
+                
+                // Send vote to server
+                fetch(`/poll/${pollId}/vote`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `option_index=${optionIndex}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Reload the page to show updated results
+                        location.reload();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while submitting your vote');
+                });
+            });
+        });
+    });
+
+    // Add this new function for toggling poll details
+    function togglePollDetails(element) {
+        const details = element.parentElement.nextElementSibling;
+        const icon = element.querySelector('i');
+        
+        if (details.style.display === 'none') {
+            details.style.display = 'block';
+            icon.classList.remove('bi-chevron-down');
+            icon.classList.add('bi-chevron-up');
+        } else {
+            details.style.display = 'none';
+            icon.classList.remove('bi-chevron-up');
+            icon.classList.add('bi-chevron-down');
+        }
+    }
+
+    // Add these new functions for post management
+    function deletePost(postId) {
+        if (confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
+            fetch(`/post/${postId}/delete`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    location.reload();
+                } else {
+                    alert('Error deleting post: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while deleting the post');
+            });
+        }
+    }
+
+    function archivePost(postId) {
+        fetch(`/post/${postId}/archive`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                location.reload();
+            } else {
+                alert('Error archiving post: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while archiving the post');
+        });
+    }
+
+    // Add this new function for toggling privacy items
+    function togglePrivacyItem(element) {
+        const content = element.nextElementSibling;
+        const icon = element.querySelector('i.bi-chevron-right');
+        
+        if (content.style.display === 'none') {
+            content.style.display = 'block';
+            icon.classList.remove('bi-chevron-right');
+            icon.classList.add('bi-chevron-down');
+        } else {
+            content.style.display = 'none';
+            icon.classList.remove('bi-chevron-down');
+            icon.classList.add('bi-chevron-right');
+        }
+    }
+</script>
+{% endblock %} 

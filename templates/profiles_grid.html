@@ -1,0 +1,60 @@
+{% for user in users %}
+<div class="col-md-4">
+    <div class="card h-100 border-0 shadow-sm hover-shadow transition-300">
+        <div class="card-body p-4">
+            <div class="d-flex align-items-center mb-4">
+                <div class="position-relative">
+                    <img src="{{ user.profile_picture or url_for('static', filename='default_profile.png') }}" 
+                         class="rounded-circle me-3" 
+                         alt="{{ user.username }}" 
+                         style="width: 60px; height: 60px; object-fit: cover;">
+                    <span class="position-absolute bottom-0 end-0 p-1 bg-{{ 'success' if user.is_public_profile else 'secondary' }} rounded-circle border border-white" 
+                          style="width: 12px; height: 12px;"></span>
+                </div>
+                <div>
+                    <h5 class="card-title mb-1 fw-bold">{{ user.username }}</h5>
+                    <p class="text-muted small mb-0">{{ user.bio or "No bio yet" }}</p>
+                </div>
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex gap-2">
+                    <span class="badge rounded-pill {% if user.is_public_profile %}bg-success bg-opacity-10 text-success{% else %}bg-secondary bg-opacity-10 text-secondary{% endif %}">
+                        <i class="bi {% if user.is_public_profile %}bi-globe{% else %}bi-lock{% endif %}"></i>
+                        {% if user.is_public_profile %}Public{% else %}Private{% endif %}
+                    </span>
+                </div>
+                <div class="d-flex gap-2">
+                    {% if user.id != current_user.id %}
+                        {% if current_user.is_friend(user) %}
+                            <button class="btn btn-outline-danger btn-sm rounded-pill unfriend-btn" data-user-id="{{ user.id }}">
+                                <i class="bi bi-person-x"></i> Unfriend
+                            </button>
+                        {% elif current_user.has_sent_friend_request(user) %}
+                            <button class="btn btn-outline-secondary btn-sm rounded-pill" disabled>
+                                <i class="bi bi-clock"></i> Request Sent
+                            </button>
+                        {% elif current_user.has_received_friend_request(user) %}
+                            <button class="btn btn-success btn-sm rounded-pill accept-request-btn" data-user-id="{{ user.id }}">
+                                Accept
+                            </button>
+                        {% else %}
+                            {% if user.is_public_profile %}
+                                <button class="btn btn-outline-primary btn-sm rounded-pill add-friend-btn" data-user-id="{{ user.id }}">
+                                    <i class="bi bi-person-plus"></i> Add Friend
+                                </button>
+                            {% else %}
+                                <button class="btn btn-outline-primary btn-sm rounded-pill send-request-btn" data-user-id="{{ user.id }}">
+                                    <i class="bi bi-person-plus"></i> Send Request
+                                </button>
+                            {% endif %}
+                        {% endif %}
+                    {% endif %}
+                    <a href="{{ url_for('view_profile', username=user.username) }}" class="btn btn-primary btn-sm rounded-pill">
+                        View Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %} 

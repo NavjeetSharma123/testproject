@@ -1,0 +1,403 @@
+{% extends "base.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block styles %}
+<style>
+    .login-container {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .login-container::before {
+        content: '';
+        position: absolute;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+        animation: rotate 20s linear infinite;
+        z-index: 1;
+    }
+    
+    .login-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(10px);
+        padding: 2.5rem;
+        width: 100%;
+        max-width: 450px;
+        transform: translateY(0);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        z-index: 2;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .login-card:hover {
+        transform: translateY(-10px) scale(1.02);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+    
+    .card-header {
+        background: transparent;
+        border: none;
+        text-align: center;
+        margin-bottom: 2.5rem;
+    }
+    
+    .card-header h3 {
+        color: #4a5568;
+        font-weight: 700;
+        font-size: 2.5rem;
+        margin: 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: textGlow 2s ease-in-out infinite alternate;
+    }
+    
+    .form-control {
+        border-radius: 15px;
+        padding: 15px 20px;
+        border: 2px solid #e2e8f0;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        background: rgba(255, 255, 255, 0.9);
+        font-size: 1rem;
+    }
+    
+    .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+        transform: translateY(-2px);
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        padding: 15px;
+        border-radius: 15px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        letter-spacing: 0.5px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-primary::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 100%);
+        transform: translateX(-100%);
+        transition: transform 0.6s ease;
+    }
+    
+    .btn-primary:hover::after {
+        transform: translateX(100%);
+    }
+    
+    .links-container {
+        margin-top: 2rem;
+        text-align: center;
+    }
+    
+    .links-container a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        position: relative;
+        padding: 0.5rem;
+    }
+    
+    .links-container a::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        transition: width 0.3s ease;
+    }
+    
+    .links-container a:hover {
+        color: #764ba2;
+    }
+    
+    .links-container a:hover::after {
+        width: 100%;
+    }
+    
+    .divider {
+        color: #a0aec0;
+        margin: 0 15px;
+        font-weight: 300;
+    }
+    
+    @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-15px); }
+        100% { transform: translateY(0px); }
+    }
+    
+    @keyframes rotate {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    @keyframes textGlow {
+        0% { text-shadow: 0 0 10px rgba(102, 126, 234, 0.5); }
+        100% { text-shadow: 0 0 20px rgba(102, 126, 234, 0.8); }
+    }
+    
+    .floating {
+        animation: float 4s ease-in-out infinite;
+    }
+
+    .form-group {
+        position: relative;
+        margin-bottom: 2rem;
+    }
+
+    .form-group label {
+        position: absolute;
+        left: 20px;
+        top: 15px;
+        color: #718096;
+        transition: all 0.3s ease;
+        pointer-events: none;
+    }
+
+    .form-group input:focus + label,
+    .form-group input:not(:placeholder-shown) + label {
+        top: -10px;
+        left: 15px;
+        font-size: 0.8rem;
+        background: white;
+        padding: 0 5px;
+        color: #667eea;
+    }
+
+    /* Social login buttons */
+    .social-login {
+        margin-top: 2rem;
+        text-align: center;
+    }
+
+    .social-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 24px;
+        margin: 0 8px;
+        border-radius: 12px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        background: white;
+        border: 1px solid #e2e8f0;
+    }
+
+    .social-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .social-btn i {
+        margin-right: 8px;
+        font-size: 1.2rem;
+    }
+
+    .google-btn {
+        color: #DB4437;
+    }
+
+    .facebook-btn {
+        color: #4267B2;
+    }
+
+    /* Error message styling */
+    .alert {
+        border-radius: 12px;
+        padding: 15px 20px;
+        margin-bottom: 20px;
+        background: rgba(255, 0, 0, 0.1);
+        border: 1px solid rgba(255, 0, 0, 0.2);
+        color: #dc3545;
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Loading spinner */
+    .spinner {
+        display: none;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 1s ease-in-out infinite;
+        margin-left: 10px;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    /* Remember me checkbox */
+    .remember-me {
+        display: flex;
+        align-items: center;
+        margin: 1rem 0;
+    }
+
+    .remember-me input[type="checkbox"] {
+        margin-right: 8px;
+        width: 18px;
+        height: 18px;
+        border-radius: 4px;
+        border: 2px solid #e2e8f0;
+        transition: all 0.3s ease;
+    }
+
+    .remember-me input[type="checkbox"]:checked {
+        background: #667eea;
+        border-color: #667eea;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-card floating">
+        <div class="card-header">
+            <h3>Welcome Back</h3>
+        </div>
+        <div class="card-body">
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            <form method="POST" id="loginForm">
+                <div class="form-group">
+                    <input type="text" class="form-control" id="identifier" name="identifier" placeholder=" " required>
+                    <label for="identifier">Username or Email</label>
+                </div>
+                <div class="form-group">
+                    <input type="password" class="form-control" id="password" name="password" placeholder=" " required>
+                    <label for="password">Password</label>
+                </div>
+                <div class="remember-me">
+                    <input type="checkbox" id="remember" name="remember">
+                    <label for="remember">Remember me</label>
+                </div>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary">
+                        Sign In
+                        <div class="spinner"></div>
+                    </button>
+                </div>
+            </form>
+            <div class="social-login">
+                <button class="social-btn google-btn">
+                    <i class="fab fa-google"></i>
+                    Sign in with Google
+                </button>
+                <button class="social-btn facebook-btn">
+                    <i class="fab fa-facebook"></i>
+                    Sign in with Facebook
+                </button>
+            </div>
+            <div class="links-container">
+                <a href="#" id="forgotPasswordLink">Forgot Password?</a>
+                <span class="divider">|</span>
+                <a href="{{ url_for('register') }}">Create an Account</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('forgotPasswordLink').addEventListener('click', function(e) {
+        e.preventDefault();
+        const identifier = document.getElementById('identifier').value;
+        if (identifier) {
+            window.location.href = "{{ url_for('forgot_password') }}?email=" + encodeURIComponent(identifier);
+        } else {
+            window.location.href = "{{ url_for('forgot_password') }}";
+        }
+    });
+    
+    // Enhanced input animations
+    document.querySelectorAll('.form-control').forEach(input => {
+        input.addEventListener('focus', function() {
+            this.parentElement.style.transform = 'scale(1.02)';
+        });
+        
+        input.addEventListener('blur', function() {
+            this.parentElement.style.transform = 'scale(1)';
+        });
+    });
+
+    // Add ripple effect to button
+    document.querySelector('.btn-primary').addEventListener('click', function(e) {
+        const button = e.currentTarget;
+        const ripple = document.createElement('span');
+        const rect = button.getBoundingClientRect();
+        
+        ripple.style.width = ripple.style.height = `${Math.max(rect.width, rect.height)}px`;
+        ripple.style.left = `${e.clientX - rect.left - ripple.offsetWidth / 2}px`;
+        ripple.style.top = `${e.clientY - rect.top - ripple.offsetHeight / 2}px`;
+        
+        ripple.classList.add('ripple');
+        button.appendChild(ripple);
+        
+        setTimeout(() => ripple.remove(), 600);
+    });
+
+    // Form submission handling
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        const button = this.querySelector('.btn-primary');
+        const spinner = button.querySelector('.spinner');
+        
+        button.disabled = true;
+        spinner.style.display = 'inline-block';
+    });
+
+    // Social login buttons
+    document.querySelector('.google-btn').addEventListener('click', function() {
+        // Add Google login logic here
+        console.log('Google login clicked');
+    });
+
+    document.querySelector('.facebook-btn').addEventListener('click', function() {
+        // Add Facebook login logic here
+        console.log('Facebook login clicked');
+    });
+</script>
+{% endblock %} 

@@ -1,0 +1,278 @@
+{% extends "base.html" %}
+
+{% block title %}Share Unfiltered Content{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-gradient-primary text-white py-4">
+                    <h4 class="mb-0"><i class="bi bi-camera-fill me-2"></i>Share Unfiltered Content</h4>
+                </div>
+                <div class="card-body p-4">
+                    <div class="alert alert-info bg-light-blue border-0">
+                        <h5><i class="bi bi-info-circle-fill text-primary me-2"></i> One-Shot Only</h5>
+                        <p class="mb-0">This platform promotes authenticity. Your content will be shared as-is, with no filters or editing allowed.</p>
+                    </div>
+                    
+                    <form method="POST" enctype="multipart/form-data" id="postForm" class="needs-validation" novalidate>
+                        <div class="mb-4">
+                            <label for="media" class="form-label fw-bold text-primary">Upload Photo or Video</label>
+                            <div class="input-group">
+                                <input type="file" class="form-control" id="media" name="media" accept="image/*,video/*" required>
+                                <button class="btn btn-outline-primary" type="button" id="uploadBtn" hidden>
+                                    <i class="bi bi-cloud-upload"></i> Choose File
+                                </button>
+                            </div>
+                            <div class="form-text text-muted">Supported formats: JPG, PNG, GIF, MP4, MOV (max 16MB)</div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="caption" class="form-label fw-bold text-primary">Caption (Optional)</label>
+                            <textarea class="form-control" id="caption" name="caption" rows="3" placeholder="Add a caption to your post..." style="resize: none;"></textarea>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="allow_comments" name="allow_comments" checked>
+                                <label class="form-check-label" for="allow_comments">Allow comments from friends</label>
+                            </div>
+                            
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="is_public" name="is_public">
+                                <label class="form-check-label" for="is_public">Make this post public (visible to everyone)</label>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-3">
+                            <button type="submit" class="btn btn-primary btn-lg py-3" id="submitBtn">
+                                <i class="bi bi-camera-fill me-2"></i> Share Now
+                            </button>
+                            <a href="{{ url_for('home') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer bg-light text-muted py-3">
+                    <small><i class="bi bi-clock me-1"></i>Your post will be timestamped automatically and will appear in your friends' feeds.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-gradient-primary {
+        background: linear-gradient(45deg, #2196F3, #1976D2);
+    }
+    
+    .bg-light-blue {
+        background-color: #E3F2FD;
+    }
+    
+    .card {
+        border-radius: 15px;
+        overflow: hidden;
+    }
+    
+    .form-control:focus {
+        border-color: #2196F3;
+        box-shadow: 0 0 0 0.25rem rgba(33, 150, 243, 0.25);
+    }
+    
+    .btn-primary {
+        background: linear-gradient(45deg, #2196F3, #1976D2);
+        border: none;
+    }
+    
+    .btn-primary:hover {
+        background: linear-gradient(45deg, #1976D2, #1565C0);
+    }
+    
+    .media-preview {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        position: relative;
+    }
+
+    .mockup-container {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 20px;
+        position: relative;
+        min-height: 400px;
+    }
+
+    .mockup-controls {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: white;
+        padding: 10px;
+        border-radius: 5px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        z-index: 100;
+    }
+
+    .mockup-controls button {
+        margin: 0 5px;
+        padding: 5px 10px;
+        border: none;
+        background: #2196F3;
+        color: white;
+        border-radius: 3px;
+        cursor: pointer;
+    }
+
+    .mockup-controls button:hover {
+        background: #1976D2;
+    }
+
+    .mockup-image {
+        max-width: 100%;
+        max-height: 100%;
+        position: absolute;
+        cursor: move;
+        user-select: none;
+    }
+
+    .progress {
+        height: 10px;
+        border-radius: 5px;
+        margin-top: 10px;
+    }
+
+    .progress-bar {
+        background: linear-gradient(45deg, #2196F3, #1976D2);
+        transition: width 0.3s ease;
+    }
+
+    .compression-info {
+        font-size: 0.9rem;
+        color: #666;
+        margin-top: 5px;
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
+<script>
+    // Preview uploaded media
+    document.getElementById('media').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.createElement('div');
+                preview.className = 'mt-3';
+                
+                if (file.type.startsWith('image/')) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.className = 'img-fluid rounded';
+                    img.style.maxHeight = '300px';
+                    preview.appendChild(img);
+                } else if (file.type.startsWith('video/')) {
+                    const video = document.createElement('video');
+                    video.src = URL.createObjectURL(file);
+                    video.className = 'img-fluid rounded';
+                    video.controls = true;
+                    video.style.maxHeight = '300px';
+                    preview.appendChild(video);
+                }
+                
+                const existingPreview = document.querySelector('.media-preview');
+                if (existingPreview) {
+                    existingPreview.remove();
+                }
+                
+                preview.className = 'media-preview mt-3';
+                document.querySelector('form').insertBefore(preview, document.querySelector('.mb-3'));
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    // Handle form submission
+    document.getElementById('postForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const fileInput = document.getElementById('media');
+        const file = fileInput.files[0];
+        
+        if (!file) {
+            alert('Please select a file to upload');
+            return;
+        }
+        
+        let processedFile = file;
+        
+        if (file.type.startsWith('image/')) {
+            // Create a temporary image element to get dimensions
+            const img = new Image();
+            img.src = URL.createObjectURL(file);
+            
+            await new Promise((resolve) => {
+                img.onload = resolve;
+            });
+            
+            // Calculate new dimensions based on template size
+            const targetHeight = 300; // Template display height
+            const targetWidth = 600; // Template display width
+            let width = img.width;
+            let height = img.height;
+            
+            // First check if we need to resize based on height
+            if (height > targetHeight) {
+                width = (targetHeight * width) / height;
+                height = targetHeight;
+            }
+            
+            // Then check if we need to resize based on width
+            if (width > targetWidth) {
+                height = (targetWidth * height) / width;
+                width = targetWidth;
+            }
+            
+            // Create canvas for resizing
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            
+            // Draw image with new dimensions
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            // Convert canvas to blob with good quality
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, file.type, 0.85));
+            processedFile = new File([blob], file.name, { type: file.type });
+            
+            // Clean up
+            URL.revokeObjectURL(img.src);
+        }
+        
+        // Create a new FormData with the processed file
+        const formData = new FormData();
+        formData.append('media', processedFile);
+        formData.append('caption', document.getElementById('caption').value);
+        formData.append('allow_comments', document.getElementById('allow_comments').checked ? 'on' : '');
+        formData.append('is_public', document.getElementById('is_public').checked ? 'on' : '');
+        
+        // Submit the form
+        const response = await fetch('{{ url_for("create_post") }}', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (response.ok) {
+            window.location.href = '{{ url_for("home") }}';
+        } else {
+            throw new Error('Upload failed');
+        }
+    });
+</script>
+{% endblock %} 

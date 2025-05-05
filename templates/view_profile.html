@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}{{ profile_user.username }}'s Profile{% endblock %}
+
+{% block content %}
+<style>
+    .content-media {
+        max-width: 1080px;
+        max-height: 1080px;
+        width: 100%;
+        height: auto;
+        object-fit: contain;
+    }
+    
+    .card-img-top {
+        max-width: 1080px;
+        max-height: 1080px;
+        width: 100%;
+        height: auto;
+        object-fit: contain;
+    }
+</style>
+
+<div class="container">
+    <div class="row">
+        <!-- User Profile Section -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <img src="{{ profile_user.profile_picture or url_for('static', filename='default_profile.png') }}" 
+                         class="rounded-circle mb-3" 
+                         alt="Profile Picture" 
+                         style="width: 150px; height: 150px; object-fit: cover;">
+                    <h4>{{ profile_user.username }}</h4>
+                    
+                    <div class="d-flex justify-content-center align-items-center gap-2 mb-2">
+                        <span class="badge {% if profile_user.is_public_profile %}bg-success{% else %}bg-secondary{% endif %}">
+                            <i class="bi {% if profile_user.is_public_profile %}bi-globe{% else %}bi-lock{% endif %}"></i>
+                            {% if profile_user.is_public_profile %}Public Profile{% else %}Private Profile{% endif %}
+                        </span>
+                    </div>
+                    
+                    {% if profile_user.id != current_user.id %}
+                        {% if is_friend %}
+                            <form method="POST" action="{{ url_for('unfriend', user_id=profile_user.id) }}" class="d-inline">
+                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                    <i class="bi bi-person-x"></i> Unfriend
+                                </button>
+                            </form>
+                        {% endif %}
+                    {% endif %}
+
+                    <!-- Profile actions -->
+                    <div class="profile-actions mt-3">
+                        {% if current_user.is_authenticated and current_user != profile_user %}
+                            {% if current_user.has_blocked(profile_user) %}
+                                <a href="{{ url_for('unblock_user', user_id=profile_user.id) }}" class="btn btn-outline-danger btn-sm">
+                                    <i class="bi bi-unlock"></i> Unblock User
+                                </a>
+                            {% else %}
+                                <div class="btn-group">
+                                    {% if profile_user in current_user.friends %}
+                                        <span class="btn btn-success btn-sm disabled">
+                                            <i class="bi bi-person-check"></i> Friends
+                                        </span>
+                                    {% endif %}
+                                    <a href="{{ url_for('block_user', user_id=profile_user.id) }}" class="btn btn-outline-danger btn-sm">
+                                        <i class="bi bi-shield-x"></i> Block
+                                    </a>
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            {% if profile_user.is_public_profile or is_friend or profile_user.id == current_user.id %}
+            <!-- Quick Stats -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Quick Stats</h5>
+                    <div class="row text-center">
+                        <div class="col">
+                            <h6>{{ profile_user.moods.count() }}</h6>
+                            <small class="text-muted">Moods</small>
+                        </div>
+                        <div class="col">
+                            <h6>{{ profile_user.posts.count() }}</h6>
+                            <small class="text-muted">Posts</small>
+                        </div>
+                        <div class="col">
+                            <h6>{{ profile_user.polls.count() }}</h6>
+                            <small class="text-muted">Polls</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Content Section -->
+        <div class="col-md-8">
+            {% if profile_user.is_public_profile or is_friend or profile_user.id == current_user.id %}
+                <!-- Recent Moods -->
+                {% if user_moods %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Recent Moods</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% for mood in user_moods %}
+                            <div class="col-md-6 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center">
+                                            <div class="mood-emoji me-3" style="font-size: 2rem;">{{ mood.emoji }}</div>
+                                            <div>
+                                                <p class="card-text mb-1">{{ mood.caption }}</p>
+                                                <small class="text-muted">{{ mood.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Recent Posts -->
+                {% if user_posts %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Recent Posts</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% for post in user_posts %}
+                            <div class="col-md-6 mb-3">
+                                <div class="card h-100">
+                                    {% if post.media_type == 'photo' %}
+                                    <img src="{{ post.display_media_url }}" class="card-img-top content-media" alt="Post image">
+                                    {% elif post.media_type == 'video' %}
+                                    <video class="card-img-top content-media" controls controlsList="nodownload nofullscreen noremoteplayback">
+                                        <source src="{{ post.media_url }}" type="video/mp4">
+                                        Your browser does not support the video tag.
+                                    </video>
+                                    {% endif %}
+                                    <div class="card-body">
+                                        <p class="card-text">{{ post.caption }}</p>
+                                        <small class="text-muted">{{ post.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Recent Polls -->
+                {% if user_polls %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Recent Polls</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% for poll in user_polls %}
+                            <div class="col-md-6 mb-3">
+                                <div class="card h-100">
+                                    {% if poll.image_url %}
+                                    <img src="{{ poll.image_url }}" class="card-img-top content-media" alt="Poll image">
+                                    {% endif %}
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ poll.question }}</h6>
+                                        <div class="list-group">
+                                            {% for option in poll.options_list %}
+                                            <div class="list-group-item">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <span>{{ option }}</span>
+                                                    <span class="badge bg-primary rounded-pill">{{ poll.get_vote_count(loop.index0) }}</span>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                        <small class="text-muted">{{ poll.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> This profile is private. You need to be friends with this user to view their content.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

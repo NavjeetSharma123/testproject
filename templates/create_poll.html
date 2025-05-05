@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}Create Poll{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-gradient-primary text-white py-3">
+                    <h4 class="mb-0"><i class="bi bi-plus-circle me-2"></i>Create a Poll</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" action="{{ url_for('create_poll') }}" enctype="multipart/form-data">
+                        <!-- Question -->
+                        <div class="mb-4">
+                            <label for="question" class="form-label fw-bold text-primary">Question</label>
+                            <input type="text" class="form-control form-control-lg border-primary" id="question" name="question" required placeholder="Enter your poll question...">
+                        </div>
+
+                        <!-- Optional Image -->
+                        <div class="mb-4">
+                            <label for="image" class="form-label fw-bold text-primary">Add an Image (optional)</label>
+                            <div class="input-group">
+                                <input type="file" class="form-control border-primary" id="image" name="image" accept="image/*">
+                                <label class="input-group-text bg-primary text-white" for="image">
+                                    <i class="bi bi-image"></i>
+                                </label>
+                            </div>
+                            <div id="imagePreview" class="mt-3 text-center" style="display: none;">
+                                <img src="" alt="Preview" class="img-fluid rounded shadow" style="max-height: 200px;">
+                            </div>
+                        </div>
+
+                        <!-- Options -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-primary">Options</label>
+                            <div id="optionsContainer">
+                                <div class="input-group mb-2">
+                                    <span class="input-group-text bg-primary text-white">1</span>
+                                    <input type="text" class="form-control border-primary" name="options[]" placeholder="Option 1" required>
+                                    <button type="button" class="btn btn-outline-danger remove-option" style="display: none;">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                                <div class="input-group mb-2">
+                                    <span class="input-group-text bg-primary text-white">2</span>
+                                    <input type="text" class="form-control border-primary" name="options[]" placeholder="Option 2" required>
+                                    <button type="button" class="btn btn-outline-danger remove-option" style="display: none;">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="addOption">
+                                <i class="bi bi-plus-circle"></i> Add Option
+                            </button>
+                        </div>
+
+                        <!-- Settings -->
+                        <div class="mb-4">
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" id="is_anonymous" name="is_anonymous">
+                                <label class="form-check-label" for="is_anonymous">
+                                    <i class="bi bi-shield-lock me-1"></i> Make votes anonymous
+                                </label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="is_public" name="is_public">
+                                <label class="form-check-label" for="is_public">
+                                    <i class="bi bi-globe me-1"></i> Make poll public (visible to everyone)
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-check-circle me-2"></i>Create Poll
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.bg-gradient-primary {
+    background: linear-gradient(45deg, #4e73df, #224abe);
+}
+
+.form-control:focus {
+    border-color: #4e73df;
+    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+}
+
+.btn-outline-primary {
+    color: #4e73df;
+    border-color: #4e73df;
+}
+
+.btn-outline-primary:hover {
+    background-color: #4e73df;
+    color: white;
+}
+
+.card {
+    border-radius: 1rem;
+    overflow: hidden;
+}
+
+.input-group-text {
+    border-radius: 0.5rem 0 0 0.5rem;
+}
+
+.form-control {
+    border-radius: 0.5rem;
+}
+
+.btn {
+    border-radius: 0.5rem;
+}
+
+.form-check-input:checked {
+    background-color: #4e73df;
+    border-color: #4e73df;
+}
+</style>
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Image preview
+    const imageInput = document.getElementById('image');
+    const imagePreview = document.getElementById('imagePreview');
+    const previewImg = imagePreview.querySelector('img');
+
+    imageInput.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                imagePreview.style.display = 'block';
+            }
+            reader.readAsDataURL(this.files[0]);
+        } else {
+            imagePreview.style.display = 'none';
+        }
+    });
+
+    // Add/remove options
+    const optionsContainer = document.getElementById('optionsContainer');
+    const addOptionBtn = document.getElementById('addOption');
+
+    addOptionBtn.addEventListener('click', function() {
+        const optionCount = optionsContainer.children.length;
+        const newOption = document.createElement('div');
+        newOption.className = 'input-group mb-2';
+        newOption.innerHTML = `
+            <span class="input-group-text bg-primary text-white">${optionCount + 1}</span>
+            <input type="text" class="form-control border-primary" name="options[]" placeholder="Option ${optionCount + 1}" required>
+            <button type="button" class="btn btn-outline-danger remove-option">
+                <i class="bi bi-trash"></i>
+            </button>
+        `;
+        optionsContainer.appendChild(newOption);
+        updateRemoveButtons();
+    });
+
+    optionsContainer.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-option')) {
+            e.target.closest('.input-group').remove();
+            updateRemoveButtons();
+        }
+    });
+
+    function updateRemoveButtons() {
+        const removeButtons = document.querySelectorAll('.remove-option');
+        removeButtons.forEach(button => {
+            button.style.display = optionsContainer.children.length > 2 ? 'block' : 'none';
+        });
+    }
+});
+</script>
+{% endblock %}
+{% endblock %} 

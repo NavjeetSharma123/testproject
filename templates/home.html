@@ -1,0 +1,1857 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<!-- Add canvas-confetti library -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+<style>
+    /* Modern UI Styles */
+    :root {
+        --primary-color: #4a90e2;
+        --secondary-color: #f5f6fa;
+        --accent-color: #ff6b6b;
+        --text-color: #2d3436;
+        --border-radius: 12px;
+        --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        --transition: all 0.3s ease;
+        --vibe-gradient: linear-gradient(45deg, #8f94fb, #ff6b6b);
+        --aura-gradient: radial-gradient(circle at center, rgba(143, 148, 251, 0.2), rgba(255, 107, 107, 0.2));
+    }
+
+    body {
+        background-color: var(--secondary-color);
+        color: var(--text-color);
+    }
+
+    .card {
+        border: none;
+        border-radius: var(--border-radius);
+        box-shadow: var(--card-shadow);
+        transition: var(--transition);
+        margin-bottom: 1.5rem;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .profile-picture {
+        width: 120px;
+        height: 120px;
+        object-fit: cover;
+        border: 4px solid white;
+        box-shadow: var(--card-shadow);
+    }
+
+    .badge {
+        padding: 0.5em 1em;
+        border-radius: 20px;
+        font-weight: 500;
+    }
+
+    .btn {
+        border-radius: 20px;
+        padding: 0.5rem 1.5rem;
+        font-weight: 500;
+        transition: var(--transition);
+    }
+
+    .btn-primary {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+
+    .btn-primary:hover {
+        background-color: darken(var(--primary-color), 10%);
+        transform: translateY(-1px);
+    }
+
+    .feed-item {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .feed-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background-color: var(--primary-color);
+        opacity: 0;
+        transition: var(--transition);
+    }
+
+    .feed-item:hover::before {
+        opacity: 1;
+    }
+
+    .emoji-display {
+        font-size: 3rem;
+        margin: 1rem 0;
+        animation: emojiBounce 1s ease-in-out infinite;
+    }
+
+    .stats-card {
+        background: linear-gradient(135deg, #4a90e2 0%, #6c5ce7 100%) !important;
+        border: none !important;
+        box-shadow: 0 4px 15px rgba(74, 144, 226, 0.2) !important;
+    }
+
+    .stats-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+        z-index: 1;
+    }
+
+    .stats-card .card-body {
+        position: relative;
+        z-index: 2;
+        padding: 1.5rem;
+    }
+
+    .stats-card h6 {
+        font-weight: 500;
+        opacity: 0.9;
+        font-size: 0.9rem;
+    }
+
+    .stats-card p {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin: 0;
+    }
+
+    .stats-card .stats-number {
+        font-size: 1.75rem;
+        font-weight: 600;
+        line-height: 1.2;
+        margin-bottom: 0.25rem;
+    }
+
+    .stats-card small {
+        font-size: 0.875rem;
+        opacity: 0.8;
+    }
+
+    .stats-card .card-title {
+        font-size: 1rem;
+        font-weight: 500;
+        opacity: 0.9;
+    }
+
+    .suggestion-card {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 1rem;
+        margin-bottom: 1rem;
+        transition: var(--transition);
+    }
+
+    .suggestion-card:hover {
+        transform: translateX(5px);
+    }
+
+    .modal-content {
+        border-radius: var(--border-radius);
+        border: none;
+    }
+
+    .modal-header {
+        border-bottom: none;
+        padding: 1.5rem;
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .form-control {
+        border-radius: 10px;
+        border: 1px solid #e1e1e1;
+        padding: 0.75rem 1rem;
+    }
+
+    .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.25);
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: var(--secondary-color);
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--primary-color);
+        border-radius: 4px;
+    }
+
+    /* Animations */
+    @keyframes emojiBounce {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.2); }
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .fade-in {
+        animation: fadeIn 0.5s ease-out;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .profile-picture {
+            width: 80px;
+            height: 80px;
+        }
+
+        .card {
+            margin-bottom: 1rem;
+        }
+
+        .btn {
+            padding: 0.4rem 1rem;
+        }
+    }
+
+    /* Mobile Share Buttons */
+    .mobile-share-buttons {
+        display: none;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: white;
+        padding: 0.5rem 0;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .mobile-share-buttons .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .mobile-share-buttons {
+            display: block;
+        }
+        
+        .desktop-sidebar {
+            display: none;
+        }
+        
+        .main-content {
+            margin-top: 0;
+        }
+    }
+
+    /* Tab Styles */
+    .nav-tabs {
+        border-bottom: none;
+    }
+    
+    .nav-tabs .nav-link {
+        color: var(--text-color);
+        border: none;
+        padding: 1rem;
+        transition: var(--transition);
+    }
+    
+    .nav-tabs .nav-link:hover {
+        color: var(--primary-color);
+        background-color: var(--secondary-color);
+    }
+    
+    .nav-tabs .nav-link.active {
+        color: var(--primary-color);
+        background-color: var(--secondary-color);
+        border-bottom: 2px solid var(--primary-color);
+    }
+    
+    .tab-content {
+        padding-top: 1rem;
+    }
+
+    /* Update Suggested Friends styles */
+    .card-header {
+        background: transparent;
+    }
+    
+    .btn-primary.rounded-pill {
+        background-color: #4a90e2;
+        border-color: #4a90e2;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-primary.rounded-pill:hover {
+        background-color: #357abd;
+        border-color: #357abd;
+        transform: translateY(-1px);
+    }
+    
+    .border-bottom {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    .border-bottom:last-child {
+        border-bottom: none !important;
+    }
+
+    /* Right Sidebar Styles */
+    .desktop-sidebar .card {
+        border-radius: var(--border-radius);
+        box-shadow: var(--card-shadow);
+        background: white;
+        margin-bottom: 1rem;
+    }
+    
+    .desktop-sidebar .card-header {
+        padding: 1rem;
+        border-bottom: none;
+    }
+    
+    .desktop-sidebar .border-bottom {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    .desktop-sidebar .border-bottom:last-child {
+        border-bottom: none !important;
+    }
+    
+    .desktop-sidebar .btn-primary.rounded-pill {
+        background-color: #4a90e2;
+        border-color: #4a90e2;
+        transition: all 0.2s ease;
+    }
+    
+    .desktop-sidebar .btn-primary.rounded-pill:hover {
+        background-color: #357abd;
+        border-color: #357abd;
+        transform: translateY(-1px);
+    }
+    
+    @media (max-width: 768px) {
+        .desktop-sidebar {
+            display: none;
+        }
+    }
+
+    /* Post Standardization Styles */
+    .card.feed-item[data-type="post"] {
+        width: 100%;
+        min-height: 400px;
+        max-height: 600px;
+        margin-bottom: 1.5rem;
+    }
+
+    .card.feed-item[data-type="post"] .card-body {
+        min-height: 300px;
+        max-height: 500px;
+        overflow: hidden;
+    }
+
+    .card.feed-item[data-type="post"] img,
+    .card.feed-item[data-type="post"] video {
+        width: 100%;
+        height: 300px;
+        object-fit: cover;
+        border-radius: var(--border-radius);
+    }
+
+    .card.feed-item[data-type="post"] .card-body p {
+        margin: 1rem 0;
+        line-height: 1.5;
+        max-height: 4.5em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+    }
+
+    .card.feed-item[data-type="post"] .card-footer {
+        padding: 1rem;
+        background-color: transparent;
+        border-top: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .card.feed-item[data-type="post"] .card-header {
+        padding: 1rem;
+        background-color: transparent;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    /* Ensure consistent spacing for posts */
+    .card.feed-item[data-type="post"] .card-body > *:not(:last-child) {
+        margin-bottom: 1rem;
+    }
+
+    /* Load More Button Styles */
+    #load-more-btn {
+        padding: 0.75rem 2rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    #load-more-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    #load-more-btn:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+
+    #load-more-btn .spinner-border {
+        width: 1rem;
+        height: 1rem;
+        margin-right: 0.5rem;
+    }
+
+    /* Responsive adjustments for posts */
+    @media (max-width: 768px) {
+        .card.feed-item[data-type="post"] {
+            min-height: 350px;
+            max-height: 500px;
+        }
+
+        .card.feed-item[data-type="post"] .card-body {
+            min-height: 250px;
+            max-height: 400px;
+        }
+
+        .card.feed-item[data-type="post"] img,
+        .card.feed-item[data-type="post"] video {
+            height: 250px;
+        }
+    }
+
+    /* Add floating animation for the vibe button */
+    .floating-vibe-btn {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: var(--vibe-gradient);
+        border: none;
+        border-radius: 50px;
+        padding: 12px 24px;
+        color: white;
+        font-weight: 500;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        z-index: 1000;
+        animation: float 3s ease-in-out infinite;
+    }
+
+    .floating-vibe-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Mobile-specific styles for the vibe button */
+    @media (max-width: 768px) {
+        .floating-vibe-btn {
+            bottom: 80px; /* Position above mobile navigation */
+            right: 15px;
+            padding: 10px 20px;
+            font-size: 0.9rem;
+        }
+
+        .vibe-icon {
+            font-size: 1.1em;
+        }
+
+        .vibe-label {
+            display: none; /* Hide text on very small screens */
+        }
+
+        /* Show label on slightly larger mobile screens */
+        @media (min-width: 400px) {
+            .vibe-label {
+                display: inline;
+            }
+        }
+    }
+
+    @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+        100% { transform: translateY(0px); }
+    }
+
+    .vibe-icon {
+        font-size: 1.2em;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+    }
+
+    /* Vibe Ping Modal */
+    .vibe-ping-modal {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        box-shadow: 0 0 30px rgba(143, 148, 251, 0.2);
+        border: none;
+    }
+
+    .vibe-subtitle {
+        font-size: 0.9em;
+        color: #666;
+        font-weight: 300;
+    }
+
+    /* Mood Picker */
+    .mood-slider {
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+        padding: 10px;
+        scrollbar-width: none;
+        margin: 0 -10px;
+    }
+
+    .mood-option {
+        flex: 0 0 auto;
+        padding: 10px 15px;
+        border-radius: 20px;
+        background: rgba(143, 148, 251, 0.1);
+        cursor: pointer;
+        transition: var(--transition);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+        border: none;
+    }
+
+    .mood-option.active {
+        background: var(--vibe-gradient);
+        color: white;
+        transform: scale(1.05);
+    }
+
+    .mood-emoji {
+        font-size: 1.5em;
+    }
+
+    .mood-label {
+        font-size: 0.8em;
+    }
+
+    /* Ping Suggestions */
+    .ping-suggestions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .suggestion {
+        padding: 15px;
+        border-radius: 15px;
+        background: rgba(143, 148, 251, 0.1);
+        cursor: pointer;
+        transition: var(--transition);
+        border: none;
+        text-align: left;
+        width: 100%;
+    }
+
+    .suggestion.active {
+        background: var(--vibe-gradient);
+        color: white;
+        transform: scale(1.02);
+    }
+
+    /* User Bubbles */
+    .user-bubbles {
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+        padding: 10px;
+        scrollbar-width: none;
+    }
+
+    .user-bubbles::-webkit-scrollbar {
+        display: none;
+    }
+
+    .user-bubble {
+        position: relative;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: var(--aura-gradient);
+        cursor: pointer;
+        transition: var(--transition);
+        overflow: hidden;
+        border: 2px solid rgba(143, 148, 251, 0.2);
+    }
+
+    .user-bubble.selected {
+        transform: scale(1.1);
+        box-shadow: 0 0 0 3px var(--vibe-gradient);
+        border: none;
+    }
+
+    .user-bubble.selected::after {
+        content: '✓';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: var(--vibe-gradient);
+        color: white;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+    }
+
+    /* Send Button */
+    .btn-vibe-ping {
+        background: var(--vibe-gradient);
+        border: none;
+        border-radius: 25px;
+        padding: 12px 24px;
+        color: white;
+        font-weight: 500;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        transition: var(--transition);
+        width: 100%;
+        margin-top: 20px;
+    }
+
+    .btn-vibe-ping:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        color: white;
+    }
+
+    /* Alert Styles */
+    .alert-success {
+        background: var(--vibe-gradient);
+        border: none;
+        color: white;
+        border-radius: 10px;
+        padding: 15px;
+        margin: 10px;
+    }
+
+    .alert-success .btn-close {
+        color: white;
+        opacity: 0.8;
+    }
+
+    .alert-success .btn-close:hover {
+        opacity: 1;
+    }
+
+    /* Emoji Display */
+    .emoji-display {
+        font-size: 2rem;
+        animation: emojiBounce 1s ease-in-out infinite;
+        margin: 0;
+    }
+
+    @keyframes emojiBounce {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.2); }
+    }
+
+    /* Add confetti styles */
+    .confetti-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1000;
+    }
+
+    /* Username styles */
+    .alert strong {
+        color: white;
+    }
+
+    /* Ensure styles are applied */
+    body {
+        background-color: var(--secondary-color);
+        color: var(--text-color);
+    }
+
+    /* Make sure the styles are properly scoped */
+    .modal-content {
+        border-radius: var(--border-radius);
+        border: none;
+    }
+
+    .modal-header {
+        border-bottom: none;
+        padding: 20px;
+    }
+
+    .modal-body {
+        padding: 20px;
+    }
+
+    /* Add important flags for critical styles */
+    .floating-vibe-btn {
+        background: var(--vibe-gradient) !important;
+        color: white !important;
+    }
+
+    .btn-vibe-ping {
+        background: var(--vibe-gradient) !important;
+        color: white !important;
+    }
+
+    .mood-option.active {
+        background: var(--vibe-gradient) !important;
+        color: white !important;
+    }
+
+    .suggestion.active {
+        background: var(--vibe-gradient) !important;
+        color: white !important;
+    }
+
+    .user-bubble.selected {
+        box-shadow: 0 0 0 3px var(--vibe-gradient) !important;
+    }
+
+    .alert-success {
+        background: var(--vibe-gradient) !important;
+        color: white !important;
+    }
+
+    /* Search Container Styles */
+    .search-container {
+        position: relative;
+    }
+
+    .search-container .input-group {
+        border-radius: 15px;
+        background: rgba(143, 148, 251, 0.1);
+        border: 1px solid rgba(143, 148, 251, 0.2);
+        transition: var(--transition);
+    }
+
+    .search-container .input-group:focus-within {
+        background: rgba(143, 148, 251, 0.15);
+        border-color: rgba(143, 148, 251, 0.3);
+        box-shadow: 0 0 0 2px rgba(143, 148, 251, 0.1);
+    }
+
+    .search-container .input-group-text {
+        color: var(--text-color);
+        opacity: 0.7;
+    }
+
+    .search-container .form-control {
+        background: transparent;
+        border: none;
+        color: var(--text-color);
+    }
+
+    .search-container .form-control:focus {
+        box-shadow: none;
+    }
+
+    .search-container .form-control::placeholder {
+        color: var(--text-color);
+        opacity: 0.5;
+    }
+
+    /* Add fade animation for search results */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .fade-in {
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    /* Add styles for hidden elements */
+    .hidden {
+        display: none !important;
+    }
+
+    /* Add styles for user bubbles container */
+    .user-bubbles-container {
+        background: rgba(143, 148, 251, 0.1);
+        border-radius: 15px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+
+    .user-bubbles {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        max-height: 200px;
+        overflow-y: auto;
+        padding: 5px;
+    }
+
+    .user-bubble {
+        position: relative;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        overflow: hidden;
+    }
+
+    .user-bubble img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .user-bubble:hover {
+        transform: scale(1.1);
+    }
+
+    .user-bubble.selected {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 2px var(--primary-color);
+    }
+
+    .user-bubble.selected::after {
+        content: '✓';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: var(--primary-color);
+        color: white;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+    }
+
+    .user-bubble-name {
+        position: absolute;
+        bottom: -20px;
+        left: 50%;
+        transform: translateX(-50%);
+        white-space: nowrap;
+        font-size: 0.8rem;
+        color: var(--text-color);
+        display: none;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 2px 6px;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .user-bubble:hover .user-bubble-name {
+        display: block;
+    }
+
+    /* Mobile styles for user bubbles */
+    @media (max-width: 768px) {
+        .user-bubbles {
+            max-height: 150px;
+        }
+
+        .user-bubble {
+            width: 50px;
+            height: 50px;
+        }
+    }
+
+    .camera-container {
+        position: relative;
+        width: 100%;
+        height: 0;
+        padding-bottom: 75%; /* 4:3 aspect ratio */
+        background: #000;
+    }
+    
+    .camera-container video,
+    .camera-container canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+</style>
+
+<div class="container py-4">
+    <!-- Mobile Share Buttons -->
+    <div class="mobile-share-buttons">
+        <div class="container">
+            <div class="row">
+                <div class="col-6 pe-1">
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-emoji-smile"></i> Share Mood
+                    </a>
+                </div>
+                <div class="col-6 ps-1">
+                    <a href="{{ url_for('create_post') }}" class="btn btn-primary">
+                        <i class="bi bi-camera"></i> Share Content
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Left Sidebar - User Profile Section -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <img src="{{ current_user.profile_picture or url_for('static', filename='default_profile.png') }}" 
+                         class="profile-picture mb-3" 
+                         alt="Profile Picture">
+                    <h4 class="mb-2">{{ current_user.username }}</h4>
+                    <p class="text-muted mb-3">{{ current_user.email }}</p>
+                    <p class="mb-3">{{ current_user.bio or "No bio yet" }}</p>
+                    <div class="d-flex justify-content-center align-items-center gap-2 mb-3">
+                        <span class="badge {% if current_user.is_public_profile %}bg-success{% else %}bg-secondary{% endif %}">
+                            <i class="bi {% if current_user.is_public_profile %}bi-globe{% else %}bi-lock{% endif %}"></i>
+                            {% if current_user.is_public_profile %}Public Profile{% else %}Private Profile{% endif %}
+                        </span>
+                    </div>
+                    <div class="d-flex justify-content-center gap-2">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary">
+                            <i class="bi bi-person"></i> View Profile
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Stats -->
+            <div class="card stats-card mt-4">
+                <div class="card-body">
+                    <h6 class="card-title text-white mb-4">Your Stats</h6>
+                    <div class="row text-center g-3">
+                        <div class="col-4 stat-item">
+                            <h6 class="small text-white-50">Moods</h6>
+                            <p class="mb-0 counter text-white">{{ user_moods|length }}</p>
+                        </div>
+                        <div class="col-4 stat-item">
+                            <h6 class="small text-white-50">Posts</h6>
+                            <p class="mb-0 counter text-white">{{ user_posts|length }}</p>
+                        </div>
+                        <div class="col-4 stat-item">
+                            <h6 class="small text-white-50">Polls</h6>
+                            <p class="mb-0 counter text-white">{{ user_polls|length }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Share Buttons -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h6 class="card-title mb-3">Share</h6>
+                    <div class="d-grid gap-3">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary">
+                            <i class="bi bi-emoji-smile"></i> Share Your Mood
+                        </a>
+                        <a href="{{ url_for('create_post') }}" class="btn btn-primary">
+                            <i class="bi bi-camera"></i> Share Unfiltered Content
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content - Feed -->
+        <div class="col-md-6">
+            <!-- Feed Navigation Tabs -->
+            <div class="card mb-4">
+                <div class="card-body p-0">
+                    <ul class="nav nav-tabs nav-fill" id="feedTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="your-feed-tab" data-bs-toggle="tab" data-bs-target="#your-feed" type="button" role="tab">
+                                <i class="bi bi-house-door me-2"></i>Your Feed
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="trending-tab" data-bs-toggle="tab" data-bs-target="#trending" type="button" role="tab">
+                                <i class="bi bi-fire me-2"></i>Trending
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="tab-content" id="feedTabsContent">
+                <!-- Your Feed Tab -->
+                <div class="tab-pane fade show active" id="your-feed" role="tabpanel">
+                    {% if feed_items %}
+                        <div id="feed-container">
+                            {% for item in feed_items %}
+                                <div class="card feed-item mb-4 {% if item.author.id == current_user.id %}border-primary{% else %}border-light{% endif %}" data-type="{{ item.type }}">
+                                    <div class="card-header d-flex align-items-center {% if item.author.id == current_user.id %}bg-primary bg-opacity-10{% endif %}">
+                                        <img src="{{ item.author.profile_picture or url_for('static', filename='default_profile.png') }}" 
+                                             class="rounded-circle me-2" 
+                                             alt="{{ item.author.username }}" 
+                                             style="width: 40px; height: 40px; object-fit: cover;">
+                                        <div>
+                                            <a href="{{ url_for('view_profile', username=item.author.username) }}" class="text-decoration-none"><h6 class="mb-0 {% if item.author.id == current_user.id %}text-primary{% endif %}">{{ item.author.username }}</h6></a>
+                                            <small class="text-muted">{{ item.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                        </div>
+                                    </div>
+                                    
+                                    {% if item.type == 'mood' %}
+                                        <div class="card-body text-center">
+                                            <div class="emoji-display">{{ item.emoji }}</div>
+                                            <h5 class="mb-3">
+                                                {% if item.emoji == '😊' %}Happy
+                                                {% elif item.emoji == '😢' %}Sad
+                                                {% elif item.emoji == '😡' %}Angry
+                                                {% elif item.emoji == '😴' %}Tired
+                                                {% elif item.emoji == '🤔' %}Thoughtful
+                                                {% elif item.emoji == '😍' %}In Love
+                                                {% elif item.emoji == '🤗' %}Grateful
+                                                {% elif item.emoji == '😤' %}Frustrated
+                                                {% elif item.emoji == '🥳' %}Celebrating
+                                                {% elif item.emoji == '😌' %}Peaceful
+                                                {% endif %}
+                                            </h5>
+                                            {% if item.caption %}
+                                                <p class="mb-3">{{ item.caption }}</p>
+                                            {% endif %}
+                                            {% if item.song_url %}
+                                                <div class="text-muted mb-3">
+                                                    <i class="bi bi-music-note-beamed"></i>
+                                                    <small>{{ item.song_url.split('/')[-1] }}</small>
+                                                </div>
+                                            {% endif %}
+                                            {% if item.photo_url %}
+                                                <img src="{{ item.photo_url }}" class="img-fluid rounded mb-3" alt="Mood photo">
+                                            {% endif %}
+                                        </div>
+                                        <div class="card-footer bg-transparent">
+                                            <div class="d-flex justify-content-between">
+                                                <button class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-emoji-smile"></i> React
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-secondary">
+                                                    <i class="bi bi-chat"></i> Comment
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-info">
+                                                    <i class="bi bi-share"></i> Share
+                                                </button>
+                                            </div>
+                                        </div>
+                                    {% elif item.type == 'post' %}
+                                        <div class="card-body">
+                                            {% if item.media_type == 'photo' %}
+                                                <img src="{{ item.display_media_url }}" class="img-fluid rounded mb-3" alt="Post image">
+                                            {% else %}
+                                                <video src="{{ item.media_url }}" class="img-fluid rounded mb-3" controls></video>
+                                            {% endif %}
+                                            <p class="mb-3">{{ item.caption or "No caption" }}</p>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="badge bg-primary">One-Shot</span>
+                                                {% if not item.is_public %}
+                                                    <span class="badge bg-secondary">Squad Only</span>
+                                                {% else %}
+                                                    <span class="badge bg-info">Public</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="card-footer bg-transparent">
+                                            <div class="d-flex justify-content-between">
+                                                <button class="btn btn-sm btn-outline-primary react-btn" data-post-id="{{ item.id }}">
+                                                    <i class="bi bi-heart"></i> 
+                                                    <span class="reaction-count">{{ item.reactions_count or 0 }}</span>
+                                                </button>
+                                                <a href="/post/{{ item.id }}" class="btn btn-sm btn-outline-secondary">
+                                                    <i class="bi bi-chat"></i> 
+                                                    <span class="comment-count">{{ item.comments_count or 0 }}</span> Comments
+                                                </a>
+                                                <button class="btn btn-sm btn-outline-info">
+                                                    <i class="bi bi-share"></i> Share
+                                                </button>
+                                            </div>
+                                        </div>
+                                    {% elif item.type == 'poll' %}
+                                        <div class="card-body">
+                                            <h5 class="mb-3">{{ item.question }}</h5>
+                                            {% if item.image_url %}
+                                                <img src="{{ item.image_url }}" class="img-fluid rounded mb-3" alt="Poll image" style="max-height: 200px;">
+                                            {% endif %}
+                                            <div class="mt-3">
+                                                {% for option in item.options_list %}
+                                                    <div class="form-check mb-3">
+                                                        <input class="form-check-input" type="radio" name="poll{{ item.id }}" id="option{{ item.id }}_{{ loop.index }}" value="{{ loop.index0 }}">
+                                                        <label class="form-check-label" for="option{{ item.id }}_{{ loop.index }}">
+                                                            {{ option }}
+                                                            <div class="progress mt-2" style="height: 6px; display: none;" id="progress{{ item.id }}_{{ loop.index }}">
+                                                                <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                                                            </div>
+                                                        </label>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                                <button class="btn btn-primary vote-btn" data-poll-id="{{ item.id }}">Vote</button>
+                                                <small class="text-muted vote-count" id="voteCount{{ item.id }}">{{ item.votes.count() }} votes</small>
+                                            </div>
+                                            <div class="alert alert-success mt-3" style="display: none;" id="voteSuccess{{ item.id }}">
+                                                Your vote has been recorded!
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                            <!-- Add Load More button -->
+                            <div class="text-center mt-4">
+                                <button id="load-more-btn" class="btn btn-primary" data-page="1">
+                                    <i class="bi bi-arrow-down-circle"></i> Load More
+                                </button>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="card mb-4">
+                            <div class="card-body text-center py-5">
+                                <i class="bi bi-people display-1 text-muted mb-3"></i>
+                                <h5>No content to show</h5>
+                                <p class="text-muted">Add some members to your squad to see their moods and posts in your feed!</p>
+                                <a href="{{ url_for('profiles') }}" class="btn btn-primary">
+                                    <i class="bi bi-person-plus"></i> Find members
+                                </a>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Trending Tab -->
+                <div class="tab-pane fade" id="trending" role="tabpanel">
+                    <div id="trending-container">
+                        {% if trending_items %}
+                            {% for item in trending_items %}
+                                <div class="card feed-item mb-4">
+                                    <div class="card-header d-flex align-items-center">
+                                        <img src="{{ item.author.profile_picture or url_for('static', filename='default_profile.png') }}" 
+                                             class="rounded-circle me-2" 
+                                             alt="{{ item.author.username }}" 
+                                             style="width: 40px; height: 40px; object-fit: cover;">
+                                        <div>
+                                            <a href="{{ url_for('view_profile', username=item.author.username) }}" class="text-decoration-none"> <h6 class="mb-0">{{ item.author.username }} </h6>
+                                            <small class="text-muted">{{ item.created_at.strftime('%Y-%m-%d %H:%M') }}</small></a>
+                                        </div>
+                                    </div>
+                                    
+                                    {% if item.type == 'mood' %}
+                                        <div class="card-body text-center">
+                                            <div class="emoji-display">{{ item.emoji }}</div>
+                                            <h5 class="mb-3">
+                                                {% if item.emoji == '😊' %}Happy
+                                                {% elif item.emoji == '😢' %}Sad
+                                                {% elif item.emoji == '😡' %}Angry
+                                                {% elif item.emoji == '😴' %}Tired
+                                                {% elif item.emoji == '🤔' %}Thoughtful
+                                                {% elif item.emoji == '😍' %}In Love
+                                                {% elif item.emoji == '🤗' %}Grateful
+                                                {% elif item.emoji == '😤' %}Frustrated
+                                                {% elif item.emoji == '🥳' %}Celebrating
+                                                {% elif item.emoji == '😌' %}Peaceful
+                                                {% endif %}
+                                            </h5>
+                                            {% if item.caption %}
+                                                <p class="mb-3">{{ item.caption }}</p>
+                                            {% endif %}
+                                            {% if item.song_url %}
+                                                <div class="text-muted mb-3">
+                                                    <i class="bi bi-music-note-beamed"></i>
+                                                    <small>{{ item.song_url.split('/')[-1] }}</small>
+                                                </div>
+                                            {% endif %}
+                                            {% if item.photo_url %}
+                                                <img src="{{ item.photo_url }}" class="img-fluid rounded mb-3" alt="Mood photo">
+                                            {% endif %}
+                                        </div>
+                                    {% elif item.type == 'post' %}
+                                        <div class="card-body">
+                                            {% if item.media_type == 'photo' %}
+                                                <img src="{{ item.display_media_url }}" class="img-fluid rounded mb-3" alt="Post image">
+                                            {% else %}
+                                                <video src="{{ item.media_url }}" class="img-fluid rounded mb-3" controls></video>
+                                            {% endif %}
+                                            <p class="mb-3">{{ item.caption or "No caption" }}</p>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="badge bg-primary">One-Shot</span>
+                                                <span class="badge bg-info">Public</span>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="card mb-4">
+                                <div class="card-body text-center py-5">
+                                    <i class="bi bi-fire display-1 text-muted mb-3"></i>
+                                    <h5>No trending content</h5>
+                                    <p class="text-muted">Be the first to create trending content!</p>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Sidebar - Suggested Friends and Trending Moods -->
+        <div class="col-md-3">
+            <!-- Suggested Friends -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Suggested Members</h5>
+                </div>
+                <div class="card-body">
+                    {% if suggested_friends %}
+                        <div class="list-group">
+                            {% for user in suggested_friends %}
+                                <div class="list-group-item">
+                                    <div class="d-flex align-items-center">
+                                        <img src="{{ user.profile_picture or url_for('static', filename='default_profile.png') }}" 
+                                             class="rounded-circle me-3" 
+                                             style="width: 40px; height: 40px; object-fit: cover;" 
+                                             alt="{{ user.username }}">
+                                        <div class="flex-grow-1">
+                                            <a href="{{ url_for('view_profile', username=user.username) }}" class="text-decoration-none">
+                                                <h6 class="mb-0">{{ user.username }}</h6>
+                                            </a>
+                                            <small class="text-muted">{{ user.bio or "No bio yet" }}</small>
+                                        </div>
+                                        <button class="btn btn-sm btn-outline-primary add-friend-btn" data-user-id="{{ user.id }}" hidden>
+                                            <i class="bi bi-person-plus"></i> Add
+                                        </button>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-center text-muted">No suggested members at the moment.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Trending Moods -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Trending Moods</h5>
+                </div>
+                <div class="card-body">
+                    {% if trending_moods %}
+                        <div class="list-group">
+                            {% for mood in trending_moods %}
+                                <div class="list-group-item">
+                                    <div class="d-flex align-items-center">
+                                        <div class="mood-emoji me-3">{{ mood.emoji }}</div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-0">
+                                                {% if mood.emoji == '😊' %}Happy
+                                                {% elif mood.emoji == '😢' %}Sad
+                                                {% elif mood.emoji == '😡' %}Angry
+                                                {% elif mood.emoji == '😴' %}Tired
+                                                {% elif mood.emoji == '🤔' %}Thoughtful
+                                                {% elif mood.emoji == '😍' %}In Love
+                                                {% elif mood.emoji == '🤗' %}Grateful
+                                                {% elif mood.emoji == '😤' %}Frustrated
+                                                {% elif mood.emoji == '🥳' %}Celebrating
+                                                {% elif mood.emoji == '😌' %}Peaceful
+                                                {% endif %}
+                                            </h6>
+                                            <small class="text-muted">by {{ mood.author.username }}</small>
+                                        </div>
+                                        <span class="badge bg-primary">
+                                            <i class="bi bi-heart-fill"></i> {{ mood.reactions.count() }}
+                                        </span>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-center text-muted">No trending moods at the moment.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editProfileModalLabel">Edit Profile</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editProfileForm" method="POST" action="{{ url_for('edit_profile') }}" enctype="multipart/form-data">
+                    <div class="mb-3 text-center">
+                        <div class="position-relative d-inline-block">
+                            <img id="profilePreview" src="{{ current_user.profile_picture or url_for('static', filename='default_profile.png') }}" 
+                                 class="rounded-circle mb-3" 
+                                 alt="Profile Picture" 
+                                 style="width: 150px; height: 150px; object-fit: cover;">
+                            <label for="profilePicture" class="position-absolute bottom-0 end-0 bg-primary text-white rounded-circle p-2" style="cursor: pointer;">
+                                <i class="bi bi-camera"></i>
+                            </label>
+                            <input type="file" class="d-none" id="profilePicture" name="profile_picture" accept="image/*">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" value="{{ current_user.username }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="bio" class="form-label">Bio</label>
+                        <textarea class="form-control" id="bio" name="bio" rows="3">{{ current_user.bio or "" }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="is_public_profile" name="is_public_profile" {% if current_user.is_public_profile %}checked{% endif %}>
+                            <label class="form-check-label" for="is_public_profile">Public Profile</label>
+                            <div class="form-text">
+                                <i class="bi bi-info-circle"></i> When enabled, your profile will be visible to everyone. When disabled, only your squad members can see your profile.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Share Modal -->
+<div class="modal fade" id="shareModal" tabindex="-1" aria-labelledby="shareModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="shareModalLabel">Share Post</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary">
+                        <i class="bi bi-facebook me-2"></i>Share on Facebook
+                    </button>
+                    <button class="btn btn-outline-info">
+                        <i class="bi bi-twitter me-2"></i>Share on Twitter
+                    </button>
+                    <button class="btn btn-outline-success">
+                        <i class="bi bi-whatsapp me-2"></i>Share on WhatsApp
+                    </button>
+                    <button class="btn btn-outline-secondary">
+                        <i class="bi bi-link-45deg me-2"></i>Copy Link
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Report Modal -->
+<div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reportModalLabel">Report Post</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="reportForm">
+                    <div class="mb-3">
+                        <label class="form-label">Reason for reporting</label>
+                        <select class="form-select" required>
+                            <option value="">Select a reason</option>
+                            <option value="inappropriate">Inappropriate content</option>
+                            <option value="spam">Spam</option>
+                            <option value="violence">Violence</option>
+                            <option value="harassment">Harassment</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Additional details</label>
+                        <textarea class="form-control" rows="3" placeholder="Please provide more information about your report"></textarea>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-danger">Submit Report</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Delete Post</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this post? This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDelete">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Floating Vibe Button -->
+<button class="floating-vibe-btn" data-bs-toggle="modal" data-bs-target="#vibePingModal">
+    <span class="vibe-icon">✨</span>
+    <span class="vibe-label">Send VibePing</span>
+</button>
+
+<!-- Vibe Ping Modal -->
+<div class="modal fade" id="vibePingModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content vibe-ping-modal">
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-center w-100">
+                    <span class="vibe-subtitle">Send a vibe, not a name</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Search Bar -->
+                <div class="search-container mb-4">
+                    <div class="input-group">
+                        <span class="input-group-text bg-transparent border-end-0">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" class="form-control border-start-0" id="vibeSearch" 
+                               placeholder="Search by username or mood..." 
+                               oninput="filterVibeContent(this.value)">
+                    </div>
+                </div>
+
+                <!-- Recipient Selection -->
+                <div class="recipient-selection mb-4">
+                    <h6 class="text-muted mb-3">Who's on your mind?</h6>
+                    <div class="user-bubbles-container">
+                        <div class="user-bubbles">
+                            <!-- User bubbles will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mood Type Picker -->
+                <div class="mood-picker mb-4">
+                    <div class="mood-slider">
+                        <div class="mood-option active" data-mood="encouraging">
+                            <span class="mood-emoji">👏</span>
+                            <span class="mood-label">Encouraging</span>
+                        </div>
+                        <div class="mood-option" data-mood="calming">
+                            <span class="mood-emoji">😌</span>
+                            <span class="mood-label">Calming</span>
+                        </div>
+                        <div class="mood-option" data-mood="hype">
+                            <span class="mood-emoji">😎</span>
+                            <span class="mood-label">Hype</span>
+                        </div>
+                        <div class="mood-option" data-mood="flirty">
+                            <span class="mood-emoji">💞</span>
+                            <span class="mood-label">Flirty</span>
+                        </div>
+                        <div class="mood-option" data-mood="supportive">
+                            <span class="mood-emoji">😵</span>
+                            <span class="mood-label">Supportive</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pre-written Ping Suggestions -->
+                <div class="ping-suggestions mb-4">
+                    <div class="suggestion active" data-message="Someone thinks you're glowing today ✨">
+                        Someone thinks you're glowing today ✨
+                    </div>
+                    <div class="suggestion" data-message="Hey, breathe. You're doing great. 💆">
+                        Hey, breathe. You're doing great. 💆
+                    </div>
+                    <div class="suggestion" data-message="You crossed someone's mind 🫶">
+                        You crossed someone's mind 🫶
+                    </div>
+                    <div class="suggestion" data-message="That fit? 🔥🔥🔥">
+                        That fit? 🔥🔥🔥
+                    </div>
+                </div>
+
+                <!-- Send Button -->
+                <button class="btn btn-vibe-ping w-100" onclick="sendVibePing()" disabled>
+                    Send VibePing
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Camera Modal -->
+<div class="modal fade" id="cameraModal" tabindex="-1" aria-labelledby="cameraModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cameraModalLabel">Take a Photo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="camera-container">
+                    <video id="cameraPreview" autoplay playsinline class="w-100"></video>
+                    <canvas id="photoCanvas" class="d-none"></canvas>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="capturePhoto">Capture</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Add click handlers for mood options
+        document.querySelectorAll('.mood-option').forEach(option => {
+            option.addEventListener('click', function() {
+                console.log('Mood clicked:', this.dataset.mood);
+                document.querySelectorAll('.mood-option').forEach(opt => opt.classList.remove('active'));
+                this.classList.add('active');
+                updateSelectedCount();
+            });
+        });
+
+        // Add click handlers for suggestions
+        document.querySelectorAll('.suggestion').forEach(suggestion => {
+            suggestion.addEventListener('click', function() {
+                console.log('Suggestion clicked:', this.dataset.message);
+                document.querySelectorAll('.suggestion').forEach(sug => sug.classList.remove('active'));
+                this.classList.add('active');
+                updateSelectedCount();
+            });
+        });
+
+        // Function to update the send button state
+        function updateSelectedCount() {
+            const selectedFriends = document.querySelectorAll('.user-bubble.selected').length;
+            const selectedMood = document.querySelector('.mood-option.active');
+            const selectedSuggestion = document.querySelector('.suggestion.active');
+            const sendButton = document.querySelector('.btn-vibe-ping');
+
+            console.log('Selected:', {
+                friends: selectedFriends,
+                mood: selectedMood ? selectedMood.dataset.mood : null,
+                suggestion: selectedSuggestion ? selectedSuggestion.dataset.message : null
+            });
+
+            if (selectedFriends > 0 && selectedMood && selectedSuggestion) {
+                sendButton.disabled = false;
+                sendButton.innerHTML = `Send VibePing (${selectedFriends})`;
+            } else {
+                sendButton.disabled = true;
+                sendButton.innerHTML = 'Send VibePing';
+            }
+        }
+
+        // Function to send a single vibe ping
+        async function sendSingleVibePing(receiverId, message) {
+            try {
+                const response = await fetch('/send_vibe_ping', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        receiver_id: receiverId,
+                        message: message
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to send vibe ping');
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('Error sending vibe ping:', error);
+                throw error;
+            }
+        }
+
+        // Function to send vibe pings
+        window.sendVibePing = async function() {
+            const selectedUsers = document.querySelectorAll('.user-bubble.selected');
+            const selectedSuggestion = document.querySelector('.suggestion.active');
+            
+            if (selectedUsers.length === 0) {
+                alert('Please select at least one recipient');
+                return;
+            }
+            
+            if (!selectedSuggestion) {
+                alert('Please select a message');
+                return;
+            }
+
+            const message = selectedSuggestion.dataset.message;
+            const sendButton = document.querySelector('.btn-vibe-ping');
+            sendButton.disabled = true;
+            sendButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sending...';
+
+            try {
+                // Send vibe pings one at a time
+                for (const user of selectedUsers) {
+                    const receiverId = user.dataset.userId;
+                    await sendSingleVibePing(receiverId, message);
+                }
+
+                // Show success animation
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+
+                // Show success message
+                const notification = document.createElement('div');
+                notification.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+                notification.style.zIndex = '1060';
+                notification.innerHTML = `
+                    <strong>Vibe Pings Sent! ✨</strong> Your positive vibes are on their way to ${selectedUsers.length} ${selectedUsers.length === 1 ? 'person' : 'people'}!
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                `;
+                document.body.appendChild(notification);
+
+                // Remove notification after 5 seconds
+                setTimeout(() => {
+                    notification.remove();
+                }, 5000);
+
+                // Close modal
+                $('#vibePingModal').modal('hide');
+            } catch (error) {
+                console.error('Error sending vibe pings:', error);
+                alert('Failed to send vibe pings. Please try again.');
+            } finally {
+                sendButton.disabled = false;
+                sendButton.innerHTML = 'Send VibePing';
+            }
+        };
+
+        // Function to load friends into the vibe ping modal
+        function loadFriends() {
+            console.log('Loading friends...');
+            fetch('/vibe_pings/friends')
+                .then(response => {
+                    console.log('Response received:', response);
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Friends data:', data);
+                    const userBubbles = document.querySelector('.user-bubbles');
+                    if (!userBubbles) {
+                        console.error('User bubbles container not found');
+                        return;
+                    }
+                    
+                    userBubbles.innerHTML = '';
+                    
+                    if (data.friends && data.friends.length > 0) {
+                        console.log(`Loading ${data.friends.length} friends`);
+                        data.friends.forEach(friend => {
+                            const bubble = document.createElement('div');
+                            bubble.className = 'user-bubble fade-in';
+                            bubble.dataset.userId = friend.id;
+                            bubble.innerHTML = `
+                                <img src="${friend.profile_picture || '/static/default_profile.png'}" 
+                                     alt="${friend.username}" 
+                                     class="rounded-circle"
+                                     style="width: 100%; height: 100%; object-fit: cover;">
+                                <div class="user-bubble-name">${friend.username}</div>
+                            `;
+                            bubble.addEventListener('click', () => {
+                                bubble.classList.toggle('selected');
+                                updateSelectedCount();
+                            });
+                            userBubbles.appendChild(bubble);
+                        });
+                    } else {
+                        console.log('No friends found');
+                        userBubbles.innerHTML = `
+                            <div class="text-center w-100 py-3">
+                                <p class="text-muted">No friends yet. Add some friends to share vibes! 👋</p>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading friends:', error);
+                    const userBubbles = document.querySelector('.user-bubbles');
+                    if (userBubbles) {
+                        userBubbles.innerHTML = `
+                            <div class="text-center w-100 py-3">
+                                <p class="text-danger">Error loading friends. Please try again later.</p>
+                            </div>
+                        `;
+                    }
+                });
+        }
+
+        // Initialize modal event listeners
+        const vibePingModal = $('#vibePingModal');
+        if (vibePingModal.length) {
+            console.log('Vibe ping modal found');
+            
+            vibePingModal.on('show.bs.modal', function() {
+                console.log('Modal shown, loading friends');
+                loadFriends();
+            });
+            
+            vibePingModal.on('shown.bs.modal', function() {
+                console.log('Modal fully shown');
+            });
+
+            // Reset selections when modal is closed
+            vibePingModal.on('hidden.bs.modal', function() {
+                document.querySelectorAll('.mood-option, .suggestion').forEach(el => el.classList.remove('active'));
+                document.querySelectorAll('.user-bubble').forEach(el => el.classList.remove('selected'));
+                updateSelectedCount();
+            });
+        } else {
+            console.error('Vibe ping modal not found in DOM');
+        }
+
+        // Camera functionality
+        let stream = null;
+        const cameraModal = $('#cameraModal');
+        const video = document.getElementById('cameraPreview');
+        const canvas = document.getElementById('photoCanvas');
+        const captureButton = document.getElementById('capturePhoto');
+
+        // Handle camera modal show
+        cameraModal.on('show.bs.modal', async function() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        facingMode: 'user',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    } 
+                });
+                video.srcObject = stream;
+            } catch (err) {
+                console.error('Error accessing camera:', err);
+                alert('Could not access camera. Please make sure you have granted camera permissions.');
+                cameraModal.modal('hide');
+            }
+        });
+
+        // Handle camera modal hide
+        cameraModal.on('hidden.bs.modal', function() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+                video.srcObject = null;
+            }
+        });
+
+        // Handle photo capture
+        captureButton.addEventListener('click', function() {
+            const context = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // Convert canvas to blob
+            canvas.toBlob(function(blob) {
+                // Create form data
+                const formData = new FormData();
+                formData.append('photo', blob, 'photo.jpg');
+                
+                // Submit the photo
+                fetch('/upload_photo', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = '/create_post?photo=' + data.photo_url;
+                    } else {
+                        alert('Failed to upload photo. Please try again.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error uploading photo:', error);
+                    alert('Failed to upload photo. Please try again.');
+                });
+            }, 'image/jpeg', 0.95);
+        });
+
+        // Add click handler for Share Unfiltered Content button
+        document.querySelectorAll('.btn-primary[href="{{ url_for("create_post") }}"]').forEach(button => {
+            button.addEventListener('click', function(e) {
+                // Check if on mobile
+                if (window.innerWidth <= 768) {
+                    e.preventDefault();
+                    cameraModal.modal('show');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %} 

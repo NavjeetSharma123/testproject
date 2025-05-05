@@ -1,0 +1,669 @@
+{% extends "base.html" %}
+
+{% block title %}{{ profile_user.username }}'s Profile{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <!-- Left Sidebar - User Profile Summary -->
+        <div class="col-md-3 mb-4">
+            <div class="card profile-card animate__animated animate__fadeIn">
+                <div class="card-body text-center">
+                    <div class="profile-picture-container">
+                        <img src="{{ profile_user.profile_picture or url_for('static', filename='default_profile.png') }}" 
+                             class="rounded-circle mb-3 profile-picture" 
+                             alt="Profile Picture" 
+                             style="width: 100px; height: 100px; object-fit: cover;">
+                    </div>
+                    <h5 class="username">{{ profile_user.username }}</h5>
+                    <p class="text-muted small bio-text">{{ profile_user.bio or "No bio yet" }}</p>
+                    <div class="d-flex justify-content-center align-items-center gap-2 mb-2">
+                        <span class="badge {% if profile_user.is_public_profile %}bg-success{% else %}bg-secondary{% endif %} profile-badge animate__animated animate__fadeIn">
+                            <i class="bi {% if profile_user.is_public_profile %}bi-globe{% else %}bi-lock{% endif %}"></i>
+                            {% if profile_user.is_public_profile %}Public{% else %}Private{% endif %}
+                        </span>
+                    </div>
+                    {% if profile_user.id != current_user.id %}
+                        {% if is_friend %}
+                            <form method="POST" action="{{ url_for('unfriend', user_id=profile_user.id) }}" class="d-inline">
+                                <button type="submit" class="btn btn-outline-danger btn-sm animate__animated animate__fadeIn">
+                                    <i class="bi bi-person-x"></i> Unfriend
+                                </button>
+                            </form>
+                            <div class="dropdown d-inline">
+                                <button class="btn btn-outline-primary btn-sm animate__animated animate__fadeIn dropdown-toggle" 
+                                        type="button" 
+                                        id="vibePingDropdown" 
+                                        data-bs-toggle="dropdown" 
+                                        aria-expanded="false">
+                                    <i class="bi bi-bell"></i> Send Vibe Ping
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="vibePingDropdown">
+                                    <li><a class="dropdown-item" href="#" onclick="sendVibePing({{ profile_user.id }}, 'You\'re doing amazing! 💪')">You're doing amazing! 💪</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="sendVibePing({{ profile_user.id }}, 'Someone thinks you need a break today 🌟')">Someone thinks you need a break today 🌟</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="sendVibePing({{ profile_user.id }}, 'You looked 🔥 today!')">You looked 🔥 today!</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="sendVibePing({{ profile_user.id }}, 'Your energy is contagious! ✨')">Your energy is contagious! ✨</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="sendVibePing({{ profile_user.id }}, 'Keep being awesome! 🌈')">Keep being awesome! 🌈</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="sendVibePing({{ profile_user.id }}, 'You\'re making a difference! 💫')">You're making a difference! 💫</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="sendVibePing({{ profile_user.id }}, 'Your smile brightens the day! 😊')">Your smile brightens the day! 😊</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="sendVibePing({{ profile_user.id }}, 'You\'re stronger than you think! 💪')">You're stronger than you think! 💪</a></li>
+                                </ul>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Quick Stats -->
+            <div class="card mt-3 stats-card animate__animated animate__fadeInUp">
+                <div class="card-body">
+                    <h6 class="card-title">{{ profile_user.username }}'s Stats</h6>
+                    <div class="row text-center">
+                        <div class="col-4 stat-item">
+                            <h6 class="small">Moods</h6>
+                            <p class="mb-0 counter">{{ profile_user.moods.count() }}</p>
+                        </div>
+                        <div class="col-4 stat-item">
+                            <h6 class="small">Posts</h6>
+                            <p class="mb-0 counter">{{ profile_user.posts.count() }}</p>
+                        </div>
+                        <div class="col-4 stat-item">
+                            <h6 class="small">Polls</h6>
+                            <p class="mb-0 counter">{{ profile_user.polls.count() }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Profile Actions -->
+            <div class="card mt-3 actions-card animate__animated animate__fadeInUp">
+                <div class="card-body">
+                    <h6 class="card-title">Actions</h6>
+                    <div class="d-grid gap-2">
+                        {% if profile_user.id != current_user.id %}
+                            {% if current_user.has_blocked(profile_user) %}
+                                <a href="{{ url_for('unblock_user', user_id=profile_user.id) }}" class="btn btn-outline-danger action-btn">
+                                    <i class="bi bi-unlock"></i> Unblock User
+                                </a>
+                            {% else %}
+                                <a href="{{ url_for('block_user', user_id=profile_user.id) }}" class="btn btn-outline-danger action-btn">
+                                    <i class="bi bi-shield-x"></i> Block User
+                                </a>
+                            {% endif %}
+                            {% if not is_friend and not current_user.has_sent_friend_request(profile_user) %}
+                                <form method="POST" action="{% if profile_user.is_public_profile %}{{ url_for('add_friend', user_id=profile_user.id) }}{% else %}{{ url_for('send_friend_request', user_id=profile_user.id) }}{% endif %}" class="d-inline">
+                                    <button type="submit" class="btn btn-outline-primary w-100 action-btn">
+                                        <i class="bi bi-person-plus"></i> {% if profile_user.is_public_profile %}Follow{% else %}Send Friend Request{% endif %}
+                                    </button>
+                                </form>
+                            {% elif current_user.has_sent_friend_request(profile_user) %}
+                                <button class="btn btn-outline-secondary w-100 action-btn" disabled>
+                                    <i class="bi bi-clock"></i> {% if profile_user.is_public_profile %}Following{% else %}Friend Request Sent{% endif %}
+                                </button>
+                            {% endif %}
+                            {% if current_user.has_received_friend_request(profile_user) %}
+                                <form action="{{ url_for('accept_friend_request', user_id=profile_user.id) }}" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-success action-btn">Accept Friend Request</button>
+                                </form>
+                            {% endif %}
+                        {% endif %}
+                        <a href="{{ url_for('profiles') }}" class="btn btn-outline-secondary action-btn">
+                            <i class="bi bi-arrow-left"></i> Back to Profiles
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content - User's Feed -->
+        <div class="col-md-6">
+            <div class="card mb-4 feed-header animate__animated animate__fadeIn">
+                <div class="card-body">
+                    <h5 class="card-title">{{ profile_user.username }}'s Content</h5>
+                    <p class="text-muted small">See what {{ profile_user.username }} has been sharing</p>
+                </div>
+            </div>
+            
+            <!-- User's Moods -->
+            {% if user_moods %}
+            <div class="card mb-4 moods-card animate__animated animate__fadeInUp">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Moods</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for mood in user_moods %}
+                        <div class="col-md-6 mb-3 mood-item">
+                            <div class="card h-100 mood-card">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center">
+                                        <div class="mood-emoji-container">
+                                            <div class="animated-emoji" 
+                                                 data-emoji="{{ mood.emoji }}"
+                                                 data-emoji-type="{{ mood.emoji_type }}">
+                                                {{ mood.emoji }}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <p class="card-text mb-1">{{ mood.caption }}</p>
+                                            <small class="text-muted">{{ mood.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- User's Posts -->
+            {% if user_posts %}
+            <div class="card mb-4 posts-card animate__animated animate__fadeInUp">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Posts</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for post in user_posts %}
+                        <div class="col-md-6 mb-3 post-item">
+                            <div class="card h-100 post-card">
+                                {% if post.media_type == 'photo' %}
+                                <img src="{{ post.display_media_url }}" class="card-img-top content-media" alt="Post image">
+                                {% elif post.media_type == 'video' %}
+                                <video class="card-img-top content-media" controls controlsList="nodownload nofullscreen noremoteplayback">
+                                    <source src="{{ post.media_url }}" type="video/mp4">
+                                    Your browser does not support the video tag.
+                                </video>
+                                {% endif %}
+                                <div class="card-body">
+                                    <p class="card-text">{{ post.caption }}</p>
+                                    <small class="text-muted">{{ post.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- User's Polls -->
+            {% if user_polls %}
+            <div class="card mb-4 polls-card animate__animated animate__fadeInUp">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Polls</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for poll in user_polls %}
+                        <div class="col-md-6 mb-3 poll-item">
+                            <div class="card h-100 poll-card">
+                                {% if poll.image_url %}
+                                <img src="{{ poll.image_url }}" class="card-img-top content-media" alt="Poll image">
+                                {% endif %}
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ poll.question }}</h6>
+                                    <div class="list-group">
+                                        {% for option in poll.options_list %}
+                                        <div class="list-group-item poll-option">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span>{{ option }}</span>
+                                                <span class="badge bg-primary rounded-pill vote-count">{{ poll.get_vote_count(loop.index0) }}</span>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    <small class="text-muted">{{ poll.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if not user_moods and not user_posts and not user_polls %}
+            <div class="card mb-4 empty-content animate__animated animate__fadeIn">
+                <div class="card-body text-center">
+                    <h5>No content to show</h5>
+                    <p class="text-muted">This user hasn't shared any content yet.</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Right Sidebar - Suggested Friends -->
+        <div class="col-md-3" hidden>
+            <div class="card mb-4 suggested-friends animate__animated animate__fadeInRight">
+                <div class="card-header">
+                    <h5 class="mb-0">Suggested Friends</h5>
+                </div>
+                <div class="card-body">
+                    {% if suggested_friends %}
+                        {% for friend in suggested_friends %}
+                        <div class="d-flex align-items-center mb-3 suggested-friend-item">
+                            <img src="{{ friend.profile_picture or url_for('static', filename='default_profile.png') }}" 
+                                 class="rounded-circle me-2 suggested-friend-avatar" 
+                                 alt="{{ friend.username }}" 
+                                 style="width: 40px; height: 40px; object-fit: cover;">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-0">{{ friend.username }}</h6>
+                                <small class="text-muted">{{ friend.bio or "No bio yet" }}</small>
+                            </div>
+                            <a href="{{ url_for('view_profile', username=friend.username) }}" class="btn btn-sm btn-outline-primary view-profile-btn">View</a>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center">No suggestions available</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/emoji-mart@latest/css/emoji-mart.css">
+<script src="https://cdn.jsdelivr.net/npm/emoji-mart@latest/dist/browser.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+    /* Fix dropdown menu z-index */
+    .dropdown-menu {
+        z-index: 1050;
+    }
+
+    /* Profile Picture Animation */
+    .profile-picture-container {
+        position: relative;
+        display: inline-block;
+    }
+    
+    .profile-picture {
+        transition: transform 0.3s ease;
+    }
+    
+    .profile-picture:hover {
+        transform: scale(1.1);
+    }
+    
+    /* Card Animations */
+    .card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    /* Stats Animation */
+    .stat-item {
+        transition: transform 0.3s ease;
+    }
+    
+    .stat-item:hover {
+        transform: scale(1.1);
+    }
+    
+    .counter {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #007bff;
+    }
+    
+    /* Action Buttons */
+    .action-btn {
+        transition: all 0.3s ease;
+    }
+    
+    .action-btn:hover {
+        transform: translateY(-2px);
+    }
+    
+    /* Mood Emoji Animation */
+    .animated-emoji {
+        font-size: 2rem;
+        position: relative;
+        display: inline-block;
+        transition: all 0.3s ease;
+    }
+    
+    .animated-emoji:hover {
+        transform: scale(1.2) rotate(10deg);
+    }
+    
+    /* Content Cards */
+    .mood-card, .post-card, .poll-card {
+        transition: all 0.3s ease;
+    }
+    
+    .mood-card:hover, .post-card:hover, .poll-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    /* Media Content */
+    .content-media {
+        transition: transform 0.3s ease;
+    }
+    
+    .content-media:hover {
+        transform: scale(1.02);
+    }
+    
+    /* Poll Options */
+    .poll-option {
+        transition: background-color 0.3s ease;
+    }
+    
+    .poll-option:hover {
+        background-color: #f8f9fa;
+    }
+    
+    /* Suggested Friends */
+    .suggested-friend-item {
+        transition: transform 0.3s ease;
+    }
+    
+    .suggested-friend-item:hover {
+        transform: translateX(5px);
+    }
+    
+    .suggested-friend-avatar {
+        transition: transform 0.3s ease;
+    }
+    
+    .suggested-friend-avatar:hover {
+        transform: scale(1.1);
+    }
+    
+    .view-profile-btn {
+        transition: all 0.3s ease;
+    }
+    
+    .view-profile-btn:hover {
+        transform: translateY(-2px);
+    }
+
+    /* Enhanced Emoji Animations */
+    .mood-emoji-container {
+        position: relative;
+        width: 40px;
+        height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Different animation styles for different emoji types */
+    .animated-emoji[data-emoji-type="happy"] {
+        animation: happyBounce 1s infinite;
+    }
+
+    .animated-emoji[data-emoji-type="sad"] {
+        animation: sadWobble 1s infinite;
+    }
+
+    .animated-emoji[data-emoji-type="love"] {
+        animation: loveBeat 1s infinite;
+    }
+
+    .animated-emoji[data-emoji-type="angry"] {
+        animation: angryShake 1s infinite;
+    }
+
+    .animated-emoji[data-emoji-type="surprised"] {
+        animation: surprisedPop 1s infinite;
+    }
+
+    /* Emoji Animation Keyframes */
+    @keyframes happyBounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px) rotate(10deg); }
+    }
+
+    @keyframes sadWobble {
+        0%, 100% { transform: rotate(0deg); }
+        25% { transform: rotate(-5deg); }
+        75% { transform: rotate(5deg); }
+    }
+
+    @keyframes loveBeat {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.2); }
+    }
+
+    @keyframes angryShake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
+
+    @keyframes surprisedPop {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.3); }
+    }
+
+    /* Emoji hover effects */
+    .mood-card:hover .animated-emoji {
+        transform: scale(1.2);
+    }
+
+    /* Emoji particle effects */
+    .emoji-particle {
+        position: absolute;
+        pointer-events: none;
+        animation: particleFade 1s ease-out forwards;
+    }
+
+    @keyframes particleFade {
+        0% { transform: translate(0, 0) scale(1); opacity: 1; }
+        100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if there's a new vibe ping
+    const urlParams = new URLSearchParams(window.location.search);
+    console.log('URL Params:', urlParams.toString());
+    if (urlParams.get('new_vibe_ping') === 'true') {
+        console.log('Triggering confetti...');
+        triggerConfetti();
+    }
+
+    // Animate stats counters
+    $('.counter').each(function() {
+        $(this).prop('Counter', 0).animate({
+            Counter: $(this).text()
+        }, {
+            duration: 1000,
+            easing: 'swing',
+            step: function(now) {
+                $(this).text(Math.ceil(now));
+            }
+        });
+    });
+    
+    // Add hover effect to mood emojis
+    $('.animated-emoji').hover(
+        function() {
+            $(this).addClass('animate__animated animate__bounce');
+        },
+        function() {
+            $(this).removeClass('animate__animated animate__bounce');
+        }
+    );
+    
+    // Add intersection observer for scroll animations
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animate__animated', 'animate__fadeInUp');
+            }
+        });
+    }, {
+        threshold: 0.1
+    });
+    
+    // Observe all cards
+    document.querySelectorAll('.card').forEach(card => {
+        observer.observe(card);
+    });
+
+    // Enhanced emoji animations
+    function createParticle(x, y, emoji) {
+        const particle = document.createElement('div');
+        particle.className = 'emoji-particle';
+        particle.textContent = emoji;
+        particle.style.left = x + 'px';
+        particle.style.top = y + 'px';
+        
+        // Random direction for particle
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 50 + Math.random() * 50;
+        const tx = Math.cos(angle) * distance;
+        const ty = Math.sin(angle) * distance;
+        
+        particle.style.setProperty('--tx', `${tx}px`);
+        particle.style.setProperty('--ty', `${ty}px`);
+        
+        return particle;
+    }
+
+    // Add click effect to emojis
+    document.querySelectorAll('.animated-emoji').forEach(emoji => {
+        emoji.addEventListener('click', function(e) {
+            const rect = this.getBoundingClientRect();
+            const x = rect.left + rect.width / 2;
+            const y = rect.top + rect.height / 2;
+            
+            // Create particles
+            for (let i = 0; i < 5; i++) {
+                const particle = createParticle(x, y, this.textContent);
+                document.body.appendChild(particle);
+                
+                // Remove particle after animation
+                setTimeout(() => particle.remove(), 1000);
+            }
+        });
+    });
+
+    // Add hover animations based on emoji type
+    document.querySelectorAll('.animated-emoji').forEach(emoji => {
+        const type = emoji.dataset.emojiType;
+        if (type) {
+            emoji.classList.add(`emoji-${type}`);
+        }
+    });
+
+    // Initialize emoji-mart for better emoji rendering
+    if (typeof EmojiMart !== 'undefined') {
+        document.querySelectorAll('.animated-emoji').forEach(emoji => {
+            const emojiData = EmojiMart.data[emoji.dataset.emoji];
+            if (emojiData) {
+                emoji.innerHTML = `<img src="${emojiData.src}" alt="${emoji.dataset.emoji}" class="emoji-img">`;
+            }
+        });
+    }
+});
+
+function sendVibePing(userId, message) {
+    fetch('/send_vibe_ping', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            receiver_id: userId,
+            message: message
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Redirect to the receiver's profile with new_vibe_ping parameter
+            window.location.href = data.redirect_url;
+        } else {
+            alert('Failed to send vibe ping: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to send vibe ping. Please try again.');
+    });
+}
+
+function triggerConfetti() {
+    console.log('Starting confetti animation...');
+    
+    // Create confetti effect
+    try {
+        confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 },
+            ticks: 200
+        });
+        console.log('Main confetti launched successfully');
+    } catch (error) {
+        console.error('Error launching main confetti:', error);
+    }
+
+    // Add emoji confetti
+    const emojis = ['✨', '🌟', '💫', '🌈', '🎉', '🎊', '💝', '💖'];
+    emojis.forEach((emoji, index) => {
+        setTimeout(() => {
+            try {
+                confetti({
+                    particleCount: 1,
+                    angle: 60 + (index * 30),
+                    spread: 55,
+                    origin: { x: 0, y: 0.6 },
+                    ticks: 200,
+                    shapes: ['text'],
+                    shapeOptions: {
+                        text: {
+                            value: emoji,
+                            fontSize: 20
+                        }
+                    }
+                });
+                console.log(`Emoji confetti launched: ${emoji}`);
+            } catch (error) {
+                console.error(`Error launching emoji confetti ${emoji}:`, error);
+            }
+        }, index * 200);
+    });
+
+    // Show notification
+    try {
+        const notification = document.createElement('div');
+        notification.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+        notification.style.zIndex = '1060';
+        notification.innerHTML = `
+            <strong>New Vibe Ping! ✨</strong> You sent a positive vibe!
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        document.body.appendChild(notification);
+        console.log('Notification created successfully');
+
+        // Remove notification after 5 seconds
+        setTimeout(() => {
+            notification.remove();
+            console.log('Notification removed');
+        }, 5000);
+    } catch (error) {
+        console.error('Error creating notification:', error);
+    }
+}
+</script>
+{% endblock %} 
